@@ -1,578 +1,242 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<!-- ============================================================
-     GYM PRO — Aplicativo de treino 100% offline
-     HTML5 + CSS3 + JavaScript puro (sem frameworks / sem libs)
-     Compatível com Android, iOS (Safari/PWA), Desktop
-============================================================ -->
-<meta charset="UTF-8">
-
-<!-- Viewport otimizado para iPhone (notch / Dynamic Island / safe-area) -->
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
-
-<title>Gym Pro — Treino Inteligente</title>
-<meta name="description" content="Aplicativo completo de musculação, 100% offline, com histórico, progressão de cargas, cronômetro e gráficos.">
-
-<!-- ===================== PWA / iOS META TAGS ===================== -->
-<meta name="theme-color" content="#0A0A0C">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Gym Pro">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="format-detection" content="telephone=no">
-
-<!-- Ícones para iOS (Home Screen) -->
-<link rel="apple-touch-icon" href="icons/icon-180.png">
-<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
-<link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png">
-<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
-
-<!-- Ícone padrão / favicon -->
-<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-
-<!-- Manifest do PWA -->
-<link rel="manifest" href="manifest.json">
-
-<!-- Splash screens do iOS (opcional — geradas depois em /icons) -->
-<link rel="apple-touch-startup-image" href="icons/splash-1170x2532.png">
-
-<!-- Folha de estilos -->
-<link rel="stylesheet" href="css/style.css">
-</head>
-
-<body>
-
-<!-- ============================================================
-     APP SHELL — contêiner raiz de toda a aplicação
-============================================================ -->
-<div id="app">
-
-  <!-- ==========================================================
-       TELA DE SPLASH / CARREGAMENTO INICIAL
-       Exibida enquanto o IndexedDB é aberto e os dados carregados
-  ========================================================== -->
-  <div id="splash-screen" class="splash-screen">
-    <div class="splash-logo">
-      <span class="splash-logo-icon">⚡</span>
-      <span class="splash-logo-text">GYM<strong>PRO</strong></span>
-    </div>
-    <div class="splash-loader"><span></span><span></span><span></span></div>
-  </div>
-
-  <!-- ==========================================================
-       CONTAINER DE TOASTS (notificações rápidas)
-       Ex: "Novo Recorde!", "Backup exportado", "Dados salvos"
-  ========================================================== -->
-  <div id="toast-container" class="toast-container" aria-live="polite"></div>
-
-  <!-- ==========================================================
-       BARRA SUPERIOR (topo fixo, dinâmica por tela)
-  ========================================================== -->
-  <header class="topbar" id="topbar">
-    <button id="topbar-back" class="topbar-back hidden" aria-label="Voltar">
-      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <h1 class="topbar-title" id="topbar-title">Início</h1>
-    <button id="topbar-action" class="topbar-action hidden" aria-label="Ação">＋</button>
-  </header>
-
-  <!-- ==========================================================
-       MAIN — as 5 telas principais do app (SPA por visibilidade)
-  ========================================================== -->
-  <main id="main-content" class="main-content">
-
-    <!-- ======================================================
-         TELA 1 — INÍCIO (dashboard resumido)
-    ====================================================== -->
-    <section id="screen-home" class="screen active" data-screen="home">
-
-      <!-- Cartão de perfil -->
-      <div class="card profile-card">
-        <div class="profile-photo-wrap">
-          <img id="user-photo" src="images/avatar-placeholder.png" alt="Foto do usuário" class="profile-photo">
-          <button id="btn-edit-photo" class="photo-edit-btn" aria-label="Alterar foto">✎</button>
-        </div>
-        <div class="profile-info">
-          <h2 id="user-name" class="profile-name">Seu Nome</h2>
-          <p id="user-goal" class="profile-goal">Objetivo: Hipertrofia</p>
-          <div class="profile-stats-row">
-            <div class="profile-stat"><span id="user-weight">-- kg</span><label>Peso</label></div>
-            <div class="profile-stat"><span id="user-height">-- cm</span><label>Altura</label></div>
-            <div class="profile-stat"><span id="user-imc">--</span><label>IMC</label></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Progresso semanal -->
-      <div class="card">
-        <div class="card-header">
-          <h3>Progresso Semanal</h3>
-          <span id="week-percent" class="badge badge-accent">0%</span>
-        </div>
-        <div class="progress-bar-track">
-          <div id="week-progress-fill" class="progress-bar-fill" style="width:0%"></div>
-        </div>
-        <p class="progress-caption"><span id="week-days-trained">0</span> de <span id="week-days-goal">5</span> dias treinados esta semana</p>
-      </div>
-
-      <!-- Grade de métricas rápidas -->
-      <div class="stats-grid">
-        <div class="stat-tile">
-          <span class="stat-icon">🔥</span>
-          <span id="stat-calories" class="stat-value">0</span>
-          <span class="stat-label">kcal estimadas</span>
-        </div>
-        <div class="stat-tile">
-          <span class="stat-icon">⏱️</span>
-          <span id="stat-time" class="stat-value">0h</span>
-          <span class="stat-label">tempo total</span>
-        </div>
-        <div class="stat-tile">
-          <span class="stat-icon">🏋️</span>
-          <span id="stat-volume" class="stat-value">0 kg</span>
-          <span class="stat-label">volume total</span>
-        </div>
-        <div class="stat-tile">
-          <span class="stat-icon">📅</span>
-          <span id="stat-days" class="stat-value">0</span>
-          <span class="stat-label">dias treinados</span>
-        </div>
-      </div>
-
-      <!-- Último treino -->
-      <div class="card">
-        <div class="card-header"><h3>Último Treino</h3></div>
-        <div id="last-workout-info" class="last-workout-empty">
-          Nenhum treino registrado ainda. Bora começar? 💪
-        </div>
-      </div>
-
-      <!-- Botão principal -->
-      <button id="btn-start-workout" class="btn-primary btn-large btn-start">
-        Iniciar Treino de Hoje
-      </button>
-    </section>
-
-    <!-- ======================================================
-         TELA 2 — TREINOS (abas por dia da semana)
-    ====================================================== -->
-    <section id="screen-workouts" class="screen" data-screen="workouts">
-
-      <!-- Abas dos dias da semana -->
-      <nav class="weekday-tabs" id="weekday-tabs" role="tablist" aria-label="Dias da semana">
-        <button class="weekday-tab" data-day="seg" role="tab">SEG</button>
-        <button class="weekday-tab" data-day="ter" role="tab">TER</button>
-        <button class="weekday-tab" data-day="qua" role="tab">QUA</button>
-        <button class="weekday-tab" data-day="qui" role="tab">QUI</button>
-        <button class="weekday-tab" data-day="sex" role="tab">SEX</button>
-        <button class="weekday-tab" data-day="sab" role="tab">SAB</button>
-        <button class="weekday-tab" data-day="dom" role="tab">DOM</button>
-      </nav>
-
-      <!-- Nome do treino do dia + editar -->
-      <div class="workout-day-header">
-        <input id="workout-day-name" class="workout-day-name-input" placeholder="Nome do treino (ex: Peito e Tríceps)">
-        <button id="btn-add-exercise" class="btn-icon-round" aria-label="Adicionar exercício">＋</button>
-      </div>
-
-      <!-- Lista de exercícios do dia -->
-      <div id="exercise-list" class="exercise-list">
-        <!-- Preenchido dinamicamente via ui.js -->
-        <div class="empty-state">
-          <span class="empty-state-icon">🗂️</span>
-          <p>Nenhum exercício adicionado para este dia.</p>
-          <button class="btn-secondary" data-action="open-library">Escolher exercícios</button>
-          <button class="btn-primary" data-action="open-generator">✨ Gerar Ficha Automática</button>
-        </div>
-      </div>
-
-      <!-- Botão flutuante concluir treino -->
-      <button id="btn-finish-workout" class="btn-primary btn-large hidden">
-        Concluir Treino
-      </button>
-    </section>
-
-    <!-- ======================================================
-         TELA 3 — PROGRESSO (dashboard + gráficos + estatísticas)
-    ====================================================== -->
-    <section id="screen-progress" class="screen" data-screen="progress">
-
-      <div class="chart-tabs" id="chart-tabs">
-        <button class="chart-tab active" data-chart="volume-weekly">Volume Semanal</button>
-        <button class="chart-tab" data-chart="volume-monthly">Volume Mensal</button>
-        <button class="chart-tab" data-chart="bodyweight">Peso Corporal</button>
-        <button class="chart-tab" data-chart="muscle-group">Grupo Muscular</button>
-        <button class="chart-tab" data-chart="load-evolution">Evolução de Carga</button>
-      </div>
-
-      <div class="card chart-card">
-        <canvas id="main-chart" width="600" height="300" aria-label="Gráfico de progresso"></canvas>
-        <p id="chart-empty-msg" class="chart-empty-msg hidden">Ainda não há dados suficientes para exibir este gráfico.</p>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><h3>Estatísticas Gerais</h3></div>
-        <div class="stats-list">
-          <div class="stats-row"><span>Maior carga registrada</span><strong id="stat-max-load">--</strong></div>
-          <div class="stats-row"><span>Maior treino (volume)</span><strong id="stat-max-workout">--</strong></div>
-          <div class="stats-row"><span>Tempo médio de treino</span><strong id="stat-avg-time">--</strong></div>
-          <div class="stats-row"><span>Volume total levantado</span><strong id="stat-total-volume">--</strong></div>
-          <div class="stats-row"><span>Treino favorito</span><strong id="stat-fav-workout">--</strong></div>
-          <div class="stats-row"><span>Músculo mais treinado</span><strong id="stat-top-muscle">--</strong></div>
-          <div class="stats-row"><span>Dias consecutivos</span><strong id="stat-streak">--</strong></div>
-          <div class="stats-row"><span>Treinos este mês</span><strong id="stat-month-count">--</strong></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ======================================================
-         TELA 4 — CALENDÁRIO
-    ====================================================== -->
-    <section id="screen-calendar" class="screen" data-screen="calendar">
-      <div class="card">
-        <div class="calendar-header">
-          <button id="cal-prev" class="btn-icon-round" aria-label="Mês anterior">‹</button>
-          <h3 id="calendar-month-label">Mês / Ano</h3>
-          <button id="cal-next" class="btn-icon-round" aria-label="Próximo mês">›</button>
-        </div>
-        <div class="calendar-weekdays">
-          <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
-        </div>
-        <div id="calendar-grid" class="calendar-grid"><!-- gerado via ui.js --></div>
-        <div class="calendar-legend">
-          <span><i class="dot dot-trained"></i> Treinado</span>
-          <span><i class="dot dot-missed"></i> Perdido</span>
-          <span><i class="dot dot-future"></i> Futuro</span>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><h3>Sequência Atual</h3></div>
-        <p class="streak-display">🔥 <span id="calendar-streak">0</span> dias seguidos</p>
-      </div>
-    </section>
-
-    <!-- ======================================================
-         TELA 5 — CONFIGURAÇÕES
-    ====================================================== -->
-    <section id="screen-settings" class="screen" data-screen="settings">
-
-      <div class="card generator-card">
-        <div class="card-header">
-          <h3>✨ Ficha de Treino Automática</h3>
-        </div>
-        <p class="generator-desc">Informe seus dados e a gente monta uma divisão de treino completa pra você, com exercícios, séries e repetições já sugeridos.</p>
-        <button id="btn-open-generator" class="btn-primary btn-block">Gerar Minha Ficha</button>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><h3>Perfil</h3></div>
-        <label class="field"><span>Nome</span><input id="cfg-name" type="text" placeholder="Seu nome"></label>
-        <label class="field"><span>Idade</span><input id="cfg-age" type="number" placeholder="Ex: 28"></label>
-        <label class="field"><span>Peso (kg)</span><input id="cfg-weight" type="number" step="0.1" placeholder="0.0"></label>
-        <label class="field"><span>Altura (cm)</span><input id="cfg-height" type="number" step="0.1" placeholder="0.0"></label>
-        <label class="field">
-          <span>Objetivo</span>
-          <select id="cfg-goal">
-            <option value="hipertrofia">Hipertrofia</option>
-            <option value="emagrecimento">Emagrecimento</option>
-            <option value="forca">Força</option>
-            <option value="resistencia">Resistência</option>
-            <option value="saude">Saúde Geral</option>
-          </select>
-        </label>
-        <button id="btn-save-profile" class="btn-primary">Salvar Perfil</button>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><h3>Aparência</h3></div>
-        <label class="field field-row">
-          <span>Tema</span>
-          <div class="segmented" id="theme-toggle">
-            <button data-theme="dark" class="segmented-btn active">Escuro</button>
-            <button data-theme="light" class="segmented-btn">Claro</button>
-          </div>
-        </label>
-        <label class="field field-row">
-          <span>Cor de destaque</span>
-          <div class="color-swatches" id="color-swatches">
-            <button class="swatch active" data-color="#0AF0D8" style="background:#0AF0D8"></button>
-            <button class="swatch" data-color="#3D8BFF" style="background:#3D8BFF"></button>
-            <button class="swatch" data-color="#7C5CFF" style="background:#7C5CFF"></button>
-            <button class="swatch" data-color="#FF5C7A" style="background:#FF5C7A"></button>
-            <button class="swatch" data-color="#FFB13D" style="background:#FFB13D"></button>
-            <button class="swatch" data-color="#3DFF8C" style="background:#3DFF8C"></button>
-          </div>
-        </label>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><h3>Dados</h3></div>
-        <button id="btn-export-json" class="btn-secondary btn-block">Exportar Backup (JSON)</button>
-        <button id="btn-import-json" class="btn-secondary btn-block">Importar Backup (JSON)</button>
-        <input id="import-file-input" type="file" accept="application/json" class="hidden">
-        <button id="btn-reset-data" class="btn-danger btn-block">Resetar Todos os Dados</button>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><h3>Sobre</h3></div>
-        <p class="about-text">Gym Pro — v1.0.0<br>100% offline • Seus dados nunca saem do seu aparelho.</p>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- ==========================================================
-       MENU INFERIOR (navegação principal — 5 abas)
-  ========================================================== -->
-  <nav class="bottom-nav" id="bottom-nav" aria-label="Navegação principal">
-    <button class="nav-btn active" data-screen="home">
-      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 11.5L12 4l8 7.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-8.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
-      <span>Início</span>
-    </button>
-    <button class="nav-btn" data-screen="workouts">
-      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M6.5 6.5l11 11M4 9l3-3 3 3-3 3-3-3zm10 10l3-3 3 3-3 3-3-3zM9 4l2 2M18 18l2 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <span>Treinos</span>
-    </button>
-    <button class="nav-btn" data-screen="progress">
-      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 20V10m6.5 10V4m6.5 16v-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <span>Progresso</span>
-    </button>
-    <button class="nav-btn" data-screen="calendar">
-      <svg viewBox="0 0 24 24" width="22" height="22"><rect x="4" y="5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 9.5h16M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <span>Calendário</span>
-    </button>
-    <button class="nav-btn" data-screen="settings">
-      <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m10 10l1.4 1.4M5.6 18.4l1.4-1.4m10-10l1.4-1.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <span>Ajustes</span>
-    </button>
-  </nav>
-
-  <!-- ==========================================================
-       MODAL — BIBLIOTECA DE EXERCÍCIOS (pesquisa + filtros)
-  ========================================================== -->
-  <div id="modal-library" class="modal hidden">
-    <div class="modal-sheet modal-sheet-full">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <h3>Biblioteca de Exercícios</h3>
-        <button class="modal-close" data-close="modal-library" aria-label="Fechar">✕</button>
-      </div>
-      <input id="library-search" type="search" class="search-input" placeholder="Pesquisar exercício...">
-      <div class="filter-row" id="library-filters">
-        <select id="filter-group"><option value="">Grupo Muscular</option></select>
-        <select id="filter-equipment"><option value="">Equipamento</option></select>
-        <select id="filter-level"><option value="">Nível</option></select>
-      </div>
-      <div id="library-results" class="library-results"><!-- gerado via ui.js --></div>
-    </div>
-  </div>
-
-  <!-- ==========================================================
-       MODAL — DETALHE DO EXERCÍCIO
-  ========================================================== -->
-  <div id="modal-exercise" class="modal hidden">
-    <div class="modal-sheet modal-sheet-full" id="exercise-detail-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <h3 id="ex-detail-name">Exercício</h3>
-        <button class="modal-close" data-close="modal-exercise" aria-label="Fechar">✕</button>
-      </div>
-
-      <div class="ex-media">
-        <img id="ex-detail-img" src="" alt="" class="ex-detail-img">
-        <button id="ex-btn-youtube" class="btn-youtube" aria-label="Ver no YouTube">▶ YouTube</button>
-      </div>
-
-      <div class="ex-tags">
-        <span class="tag" id="ex-detail-group">Grupo</span>
-        <span class="tag" id="ex-detail-level">Nível</span>
-        <span class="tag" id="ex-detail-equipment">Equipamento</span>
-      </div>
-
-      <p id="ex-detail-desc" class="ex-desc"></p>
-
-      <div class="ex-accordion">
-        <details><summary>Músculos secundários</summary><p id="ex-detail-secondary"></p></details>
-        <details><summary>Erros comuns</summary><p id="ex-detail-mistakes"></p></details>
-        <details><summary>Dicas</summary><p id="ex-detail-tips"></p></details>
-        <details><summary>QR Code</summary><div id="ex-detail-qrcode" class="qrcode-box"></div></details>
-      </div>
-
-      <!-- Registro de séries -->
-      <div class="series-block">
-        <div class="card-header">
-          <h4>Séries</h4>
-          <button id="ex-btn-add-series" class="btn-icon-round small" aria-label="Adicionar série">＋</button>
-        </div>
-        <div id="series-list" class="series-list"><!-- gerado via ui.js --></div>
-      </div>
-
-      <button id="ex-btn-open-timer" class="btn-secondary btn-block">Abrir Cronômetro de Descanso</button>
-    </div>
-  </div>
-
-  <!-- ==========================================================
-       MODAL — CRONÔMETRO CIRCULAR
-  ========================================================== -->
-  <div id="modal-timer" class="modal hidden">
-    <div class="modal-sheet modal-sheet-center">
-      <div class="modal-header">
-        <h3>Descanso</h3>
-        <button class="modal-close" data-close="modal-timer" aria-label="Fechar">✕</button>
-      </div>
-
-      <div class="timer-circle-wrap">
-        <svg viewBox="0 0 200 200" class="timer-svg">
-          <circle cx="100" cy="100" r="90" class="timer-track"/>
-          <circle cx="100" cy="100" r="90" class="timer-progress" id="timer-progress-circle"/>
-        </svg>
-        <div class="timer-display" id="timer-display">00:60</div>
-      </div>
-
-      <div class="timer-presets">
-        <button class="timer-preset" data-seconds="30">30s</button>
-        <button class="timer-preset" data-seconds="45">45s</button>
-        <button class="timer-preset active" data-seconds="60">60s</button>
-        <button class="timer-preset" data-seconds="90">90s</button>
-        <button class="timer-preset" data-seconds="120">120s</button>
-        <button class="timer-preset" data-seconds="180">180s</button>
-      </div>
-
-      <div class="timer-controls">
-        <button id="timer-btn-reset" class="btn-icon-round" aria-label="Reiniciar">⟲</button>
-        <button id="timer-btn-toggle" class="btn-primary btn-large timer-toggle-btn">Iniciar</button>
-        <button id="timer-btn-skip" class="btn-icon-round" aria-label="Pular">⏭</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==========================================================
-       MODAL — GERADOR AUTOMÁTICO DE FICHA DE TREINO
-  ========================================================== -->
-  <div id="modal-generator" class="modal hidden">
-    <div class="modal-sheet modal-sheet-full">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <h3>✨ Gerar Ficha Automática</h3>
-        <button class="modal-close" data-close="modal-generator" aria-label="Fechar">✕</button>
-      </div>
-
-      <p class="generator-desc">Preencha seus dados abaixo. Vamos montar uma divisão de treino (split) e escolher os exercícios de acordo com seu objetivo e o tempo que você tem disponível.</p>
-
-      <label class="field">
-        <span>Idade</span>
-        <input id="gen-age" type="number" placeholder="Ex: 28" min="10" max="100">
-      </label>
-
-      <div class="field-pair">
-        <label class="field">
-          <span>Peso (kg)</span>
-          <input id="gen-weight" type="number" step="0.1" placeholder="0.0">
-        </label>
-        <label class="field">
-          <span>Altura (cm)</span>
-          <input id="gen-height" type="number" step="0.1" placeholder="0.0">
-        </label>
-      </div>
-
-      <label class="field">
-        <span>Objetivo</span>
-        <select id="gen-goal">
-          <option value="hipertrofia">Hipertrofia (ganho de massa)</option>
-          <option value="emagrecimento">Emagrecimento</option>
-          <option value="forca">Força</option>
-          <option value="resistencia">Resistência</option>
-          <option value="saude">Saúde Geral</option>
-        </select>
-      </label>
-
-      <label class="field">
-        <span>Onde você vai treinar?</span>
-        <div class="segmented segmented-wide" id="gen-location">
-          <button type="button" data-location="academia" class="segmented-btn active">🏋️ Academia</button>
-          <button type="button" data-location="casa" class="segmented-btn">🏠 Casa (Calistenia)</button>
-        </div>
-      </label>
-
-      <label class="field">
-        <span>Nível de experiência</span>
-        <select id="gen-experience">
-          <option value="iniciante">Iniciante (nunca treinei ou &lt; 6 meses)</option>
-          <option value="intermediario">Intermediário (6 meses a 2 anos)</option>
-          <option value="avancado">Avançado (2+ anos treinando)</option>
-        </select>
-      </label>
-
-      <label class="field">
-        <span>Dias disponíveis para treinar na semana</span>
-        <div class="weekday-tabs" id="gen-days">
-          <button type="button" class="weekday-tab" data-day="seg">SEG</button>
-          <button type="button" class="weekday-tab" data-day="ter">TER</button>
-          <button type="button" class="weekday-tab" data-day="qua">QUA</button>
-          <button type="button" class="weekday-tab" data-day="qui">QUI</button>
-          <button type="button" class="weekday-tab" data-day="sex">SEX</button>
-          <button type="button" class="weekday-tab" data-day="sab">SAB</button>
-          <button type="button" class="weekday-tab" data-day="dom">DOM</button>
-        </div>
-      </label>
-
-      <label class="field">
-        <span>Tempo disponível por treino</span>
-        <select id="gen-minutes">
-          <option value="30">Até 30 minutos</option>
-          <option value="45">Até 45 minutos</option>
-          <option value="60" selected>Até 60 minutos</option>
-          <option value="75">Até 75 minutos</option>
-          <option value="90">Até 90 minutos</option>
-        </select>
-      </label>
-
-      <p id="gen-error" class="generator-error hidden">Selecione ao menos 1 dia disponível.</p>
-
-      <button id="gen-btn-generate" class="btn-primary btn-large btn-block">Gerar Ficha de Treino</button>
-    </div>
-  </div>
-
-  <!-- ==========================================================
-       OVERLAY — TREINO CONCLUÍDO (celebração)
-  ========================================================== -->
-  <div id="overlay-complete" class="overlay hidden">
-    <div class="complete-card">
-      <div class="complete-icon">🏆</div>
-      <h2>Treino Concluído!</h2>
-      <p id="complete-summary">Volume total: 0 kg • Tempo: 0min</p>
-      <button id="btn-close-complete" class="btn-primary btn-large">Fechar</button>
-    </div>
-  </div>
-
-  <!-- ==========================================================
-       OVERLAY — NOVO RECORDE
-  ========================================================== -->
-  <div id="overlay-record" class="overlay overlay-record hidden">
-    <div class="record-card">
-      <div class="record-icon">🥇</div>
-      <h2>Novo Recorde!</h2>
-      <p id="record-detail">Supino — 42 kg</p>
-      <p class="record-sub">Parabéns pela evolução 💪</p>
-    </div>
-  </div>
-
-</div><!-- /#app -->
-
-<!-- ============================================================
-     SCRIPTS — ordem de carregamento importa (dependências)
-============================================================ -->
-<script src="js/db.js" defer></script>
-<script src="js/exercises.js" defer></script>
-<script src="js/generator.js" defer></script>
-<script src="js/timer.js" defer></script>
-<script src="js/charts.js" defer></script>
-<script src="js/ui.js" defer></script>
-<script src="js/pwa.js" defer></script>
-<script src="js/app.js" defer></script>
-
-</body>
-</html>
+/* ================================================================
+   GYM PRO — pictograms.js
+   Ícones animados (SVG + CSS) que ilustram o PADRÃO DE MOVIMENTO
+   de cada exercício — uma silhueta simples se move para dar uma
+   noção rápida de "o que fazer", 100% original e offline (sem
+   depender de fotos/GIFs de terceiros, que teriam direitos autorais).
+
+   Isso complementa — não substitui — o botão "Ver no YouTube" que
+   já existe no detalhe do exercício para quem quer ver a execução
+   real feita por uma pessoa.
+================================================================ */
+
+const Pictograms = (() => {
+
+  /* Cada padrão de movimento tem seu próprio SVG com uma parte
+     animada (braço, perna ou o corpo inteiro) via CSS var()
+     controlando ângulo/posição — assim reaproveitamos as mesmas
+     duas @keyframes (rotação e translação) para todos os ícones. */
+
+  const HEAD = `<circle cx="50" cy="15" r="7" class="pg-fill"/>`;
+
+  function svg(inner) {
+    return `<svg class="pictogram-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">${inner}</svg>`;
+  }
+
+  /* ---- Padrão: EMPURRAR (supino, desenvolvimento, flexão) ---- */
+  function pushSVG() {
+    return svg(`
+      ${HEAD}
+      <line x1="50" y1="22" x2="50" y2="54" class="pg-line"/>
+      <line x1="50" y1="54" x2="41" y2="83" class="pg-line"/>
+      <line x1="50" y1="54" x2="59" y2="83" class="pg-line"/>
+      <g class="pg-rotate" style="--a0:34deg;--a1:-14deg;transform-origin:50px 29px;">
+        <line x1="50" y1="29" x2="35" y2="47" class="pg-line"/>
+      </g>
+      <g class="pg-rotate" style="--a0:-34deg;--a1:14deg;transform-origin:50px 29px;">
+        <line x1="50" y1="29" x2="65" y2="47" class="pg-line"/>
+      </g>
+    `);
+  }
+
+  /* ---- Padrão: PUXAR (remada, puxada, barra fixa) ---- */
+  function pullSVG() {
+    return svg(`
+      ${HEAD}
+      <line x1="50" y1="22" x2="50" y2="54" class="pg-line"/>
+      <line x1="50" y1="54" x2="41" y2="83" class="pg-line"/>
+      <line x1="50" y1="54" x2="59" y2="83" class="pg-line"/>
+      <g class="pg-rotate" style="--a0:-14deg;--a1:38deg;transform-origin:50px 29px;">
+        <line x1="50" y1="29" x2="35" y2="47" class="pg-line"/>
+      </g>
+      <g class="pg-rotate" style="--a0:14deg;--a1:-38deg;transform-origin:50px 29px;">
+        <line x1="50" y1="29" x2="65" y2="47" class="pg-line"/>
+      </g>
+    `);
+  }
+
+  /* ---- Padrão: ELEVAÇÃO LATERAL (ombro, abdução) ---- */
+  function raiseSVG() {
+    return svg(`
+      ${HEAD}
+      <line x1="50" y1="22" x2="50" y2="54" class="pg-line"/>
+      <line x1="50" y1="54" x2="41" y2="83" class="pg-line"/>
+      <line x1="50" y1="54" x2="59" y2="83" class="pg-line"/>
+      <g class="pg-rotate" style="--a0:0deg;--a1:-72deg;transform-origin:50px 29px;">
+        <line x1="50" y1="29" x2="50" y2="51" class="pg-line"/>
+      </g>
+      <g class="pg-rotate" style="--a0:0deg;--a1:72deg;transform-origin:50px 29px;">
+        <line x1="50" y1="29" x2="50" y2="51" class="pg-line"/>
+      </g>
+    `);
+  }
+
+  /* ---- Padrão: ROSCA / FLEXÃO DE COTOVELO (bíceps) ---- */
+  function curlSVG() {
+    return svg(`
+      ${HEAD}
+      <line x1="50" y1="22" x2="50" y2="54" class="pg-line"/>
+      <line x1="50" y1="54" x2="41" y2="83" class="pg-line"/>
+      <line x1="50" y1="54" x2="59" y2="83" class="pg-line"/>
+      <line x1="50" y1="29" x2="38" y2="47" class="pg-line"/>
+      <g class="pg-rotate" style="--a0:0deg;--a1:-115deg;transform-origin:38px 47px;">
+        <line x1="38" y1="47" x2="38" y2="66" class="pg-line"/>
+      </g>
+      <line x1="50" y1="29" x2="62" y2="47" class="pg-line pg-dim"/>
+      <line x1="62" y1="47" x2="62" y2="66" class="pg-line pg-dim"/>
+    `);
+  }
+
+  /* ---- Padrão: EXTENSÃO DE COTOVELO (tríceps) ---- */
+  function extensionSVG() {
+    return svg(`
+      ${HEAD}
+      <line x1="50" y1="22" x2="50" y2="54" class="pg-line"/>
+      <line x1="50" y1="54" x2="41" y2="83" class="pg-line"/>
+      <line x1="50" y1="54" x2="59" y2="83" class="pg-line"/>
+      <line x1="50" y1="29" x2="38" y2="43" class="pg-line"/>
+      <g class="pg-rotate" style="--a0:-110deg;--a1:0deg;transform-origin:38px 43px;">
+        <line x1="38" y1="43" x2="38" y2="62" class="pg-line"/>
+      </g>
+      <line x1="50" y1="29" x2="62" y2="47" class="pg-line pg-dim"/>
+      <line x1="62" y1="47" x2="62" y2="66" class="pg-line pg-dim"/>
+    `);
+  }
+
+  /* ---- Padrão: AGACHAR (pernas, glúteos — dominância de joelho) ---- */
+  function squatSVG() {
+    return svg(`
+      <g class="pg-bob" style="--t0:0px;--t1:11px;--s0:1;--s1:0.9;transform-origin:50px 60px;">
+        ${HEAD}
+        <line x1="50" y1="22" x2="50" y2="54" class="pg-line"/>
+        <line x1="50" y1="29" x2="38" y2="47" class="pg-line"/>
+        <line x1="50" y1="29" x2="62" y2="47" class="pg-line"/>
+        <line x1="50" y1="54" x2="39" y2="83" class="pg-line"/>
+        <line x1="50" y1="54" x2="61" y2="83" class="pg-line"/>
+      </g>
+    `);
+  }
+
+  /* ---- Padrão: DOBRADIÇA DE QUADRIL (terra, stiff, hip thrust) ---- */
+  function hingeSVG() {
+    return svg(`
+      <line x1="50" y1="55" x2="41" y2="83" class="pg-line"/>
+      <line x1="50" y1="55" x2="59" y2="83" class="pg-line"/>
+      <g class="pg-rotate" style="--a0:0deg;--a1:32deg;transform-origin:50px 55px;">
+        ${HEAD}
+        <line x1="50" y1="22" x2="50" y2="55" class="pg-line"/>
+        <line x1="50" y1="29" x2="41" y2="47" class="pg-line"/>
+        <line x1="50" y1="29" x2="59" y2="47" class="pg-line"/>
+      </g>
+    `);
+  }
+
+  /* ---- Padrão: CORE (abdômen — elevação de pernas / prancha) ---- */
+  function coreSVG() {
+    return svg(`
+      ${HEAD}
+      <line x1="50" y1="22" x2="50" y2="54" class="pg-line"/>
+      <line x1="50" y1="29" x2="38" y2="47" class="pg-line pg-dim"/>
+      <line x1="50" y1="29" x2="62" y2="47" class="pg-line pg-dim"/>
+      <g class="pg-rotate" style="--a0:6deg;--a1:-46deg;transform-origin:50px 54px;">
+        <line x1="50" y1="54" x2="41" y2="83" class="pg-line"/>
+        <line x1="50" y1="54" x2="59" y2="83" class="pg-line"/>
+      </g>
+    `);
+  }
+
+  /* ---- Padrão: PANTURRILHA (elevação de calcanhar) ---- */
+  function calfSVG() {
+    return svg(`
+      <g class="pg-bob" style="--t0:0px;--t1:-7px;--s0:1;--s1:1;transform-origin:50px 83px;">
+        ${HEAD}
+        <line x1="50" y1="22" x2="50" y2="54" class="pg-line"/>
+        <line x1="50" y1="29" x2="38" y2="47" class="pg-line pg-dim"/>
+        <line x1="50" y1="29" x2="62" y2="47" class="pg-line pg-dim"/>
+        <line x1="50" y1="54" x2="41" y2="83" class="pg-line"/>
+        <line x1="50" y1="54" x2="59" y2="83" class="pg-line"/>
+      </g>
+    `);
+  }
+
+  /* ---- Padrão: CARDIO (corrida — pernas alternando) ---- */
+  function cardioSVG() {
+    return svg(`
+      ${HEAD}
+      <line x1="50" y1="22" x2="50" y2="54" class="pg-line"/>
+      <line x1="50" y1="29" x2="38" y2="45" class="pg-line pg-dim"/>
+      <line x1="50" y1="29" x2="62" y2="45" class="pg-line pg-dim"/>
+      <g class="pg-rotate" style="--a0:-8deg;--a1:34deg;transform-origin:50px 55px;">
+        <line x1="50" y1="55" x2="41" y2="83" class="pg-line"/>
+      </g>
+      <g class="pg-rotate" style="--a0:8deg;--a1:-34deg;transform-origin:50px 55px;">
+        <line x1="50" y1="55" x2="59" y2="83" class="pg-line"/>
+      </g>
+    `);
+  }
+
+  /* ---- Padrão genérico (fallback estático, sem animação) ---- */
+  function genericSVG() {
+    return svg(`
+      ${HEAD}
+      <line x1="50" y1="22" x2="50" y2="54" class="pg-line"/>
+      <line x1="50" y1="29" x2="38" y2="47" class="pg-line"/>
+      <line x1="50" y1="29" x2="62" y2="47" class="pg-line"/>
+      <line x1="50" y1="54" x2="41" y2="83" class="pg-line"/>
+      <line x1="50" y1="54" x2="59" y2="83" class="pg-line"/>
+    `);
+  }
+
+  const BUILDERS = {
+    push: pushSVG,
+    pull: pullSVG,
+    raise: raiseSVG,
+    curl: curlSVG,
+    extension: extensionSVG,
+    squat: squatSVG,
+    hinge: hingeSVG,
+    core: coreSVG,
+    calf: calfSVG,
+    cardio: cardioSVG,
+    generic: genericSVG
+  };
+
+  /* Retorna o markup SVG (string) para o padrão informado */
+  function render(pattern) {
+    const builder = BUILDERS[pattern] || BUILDERS.generic;
+    return builder();
+  }
+
+  /* ----------------------------------------------------------------
+     Infere o padrão de movimento de um exercício a partir do nome e
+     do grupo muscular — evita ter que anotar manualmente os 100+
+     exercícios cadastrados, mantendo a base de dados enxuta.
+  ---------------------------------------------------------------- */
+  function inferPattern(name, group) {
+    const n = name.toLowerCase();
+
+    if (group === 'Cardio') return 'cardio';
+    if (n.includes('panturrilha')) return 'calf';
+
+    if (/agachamento|leg press|afundo|passada|búlgar|sumô|salto|wall sit|parede|goblet/.test(n)) return 'squat';
+    if (/terra|stiff|hip thrust|elevação pélvica|hiperextensão/.test(n)) return 'hinge';
+
+    if (/rosca/.test(n)) return 'curl';
+    if (/tríceps|mergulho|paralelas|supino fechado|kickback|coice/.test(n)) return 'extension';
+
+    if (/elevação lateral|elevação frontal|crucifixo|voador|peck deck|abdutora/.test(n)) return 'raise';
+
+    if (/supino|flexão|desenvolvimento|arnold|pike|crossover|leg press/.test(n)) return 'push';
+    if (/puxada|remada|barra fixa|pull-up|pulldown|face pull|encolhimento|shrug/.test(n)) return 'pull';
+
+    if (/abdomin|prancha|crunch|mountain climber|roda abdominal|bicicleta/.test(n)) return 'core';
+
+    if (/extensora|flexora|adutora/.test(n)) return 'squat';
+
+    return 'generic';
+  }
+
+  return { render, inferPattern };
+})();
+
+window.Pictograms = Pictograms;
