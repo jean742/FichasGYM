@@ -16,12 +16,12 @@
 ================================================================ */
 
 const firebaseConfig = {
-  apiKey: "COLE_AQUI_SUA_API_KEY",
-  authDomain: "COLE_AQUI_SEU_PROJETO.firebaseapp.com",
-  projectId: "COLE_AQUI_SEU_PROJECT_ID",
-  storageBucket: "COLE_AQUI_SEU_PROJETO.appspot.com",
-  messagingSenderId: "COLE_AQUI_SEU_SENDER_ID",
-  appId: "COLE_AQUI_SEU_APP_ID"
+  apiKey: "AIzaSyCUverRIkb0LtaEwQeW0xax_2z9NxezQ3g",
+  authDomain: "gym-pro-e2936.firebaseapp.com",
+  projectId: "gym-pro-e2936",
+  storageBucket: "gym-pro-e2936.firebasestorage.app",
+  messagingSenderId: "507012856047",
+  appId: "1:507012856047:web:a47be019fdc0293357431a"
 };
 
 window.FIREBASE_CONFIG = firebaseConfig;
