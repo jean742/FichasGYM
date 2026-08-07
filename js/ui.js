@@ -581,11 +581,30 @@ const UI = (() => {
 
     const btn = document.getElementById('gen-btn-generate');
     const originalLabel = btn.textContent;
-    btn.textContent = 'Gerando...';
     btn.disabled = true;
 
+    // Mensagens em etapas — a geração em si é rápida, mas mostrar o
+    // "raciocínio" por trás da ficha (analisar perfil, montar divisão,
+    // escolher exercícios) deixa claro que não é uma lista genérica.
+    const stages = [
+      'Analisando seu perfil...',
+      'Montando a divisão de treino...',
+      'Selecionando exercícios...',
+      'Ajustando séries e repetições...'
+    ];
+    let stageIndex = 0;
+    btn.textContent = stages[0];
+    const stageInterval = setInterval(() => {
+      stageIndex = (stageIndex + 1) % stages.length;
+      btn.textContent = stages[stageIndex];
+    }, 450);
+
     try {
-      const plan = await Generator.generateAndSave(params);
+      const [plan] = await Promise.all([
+        Generator.generateAndSave(params),
+        new Promise((resolve) => setTimeout(resolve, 1400)) // dá tempo de ler as etapas
+      ]);
+      clearInterval(stageInterval);
 
       document.getElementById('modal-generator').classList.add('hidden');
       showToast(`Ficha gerada: ${plan.length} dia(s) de treino 💪`, 'success');
@@ -602,6 +621,7 @@ const UI = (() => {
       console.error('[Generator] Erro ao gerar ficha:', err);
       showToast('Não foi possível gerar a ficha. Tente novamente.', 'danger');
     } finally {
+      clearInterval(stageInterval);
       btn.textContent = originalLabel;
       btn.disabled = false;
     }
@@ -635,13 +655,51 @@ const UI = (() => {
     document.getElementById('ex-detail-mistakes').textContent = fullData.mistakes || '-';
     document.getElementById('ex-detail-tips').textContent = fullData.tips || '-';
 
+    // Reseta o player de vídeo sempre que um novo exercício é aberto
+    const videoWrap = document.getElementById('ex-video-wrap');
+    const videoAspect = document.getElementById('ex-video-aspect');
+    videoWrap.classList.add('hidden');
+    videoAspect.innerHTML = '';
+
     const ytBtn = document.getElementById('ex-btn-youtube');
-    ytBtn.onclick = () => window.open(fullData.youtube || '#', '_blank');
+    if (fullData.videoId) {
+      // Vídeo curado disponível: toca embutido, "abrindo" logo abaixo do botão
+      ytBtn.textContent = '▶ Assistir vídeo';
+      ytBtn.onclick = () => toggleEmbeddedVideo(fullData.videoId);
+    } else {
+      // Sem vídeo curado ainda: abre a busca no YouTube em nova aba
+      ytBtn.textContent = '🔍 Buscar no YouTube';
+      ytBtn.onclick = () => window.open(fullData.youtube || '#', '_blank');
+    }
 
     renderQRCode(fullData.youtube || window.location.href);
     renderExerciseDetailSeries();
 
     document.getElementById('modal-exercise').classList.remove('hidden');
+  }
+
+  /* Alterna a exibição do player de vídeo embutido logo abaixo do botão.
+     O iframe só é criado quando o vídeo é aberto (evita carregar/
+     autoplay vídeos que a pessoa nunca clicou para ver). */
+  function toggleEmbeddedVideo(videoId) {
+    const wrap = document.getElementById('ex-video-wrap');
+    const aspect = document.getElementById('ex-video-aspect');
+    const isOpen = !wrap.classList.contains('hidden');
+
+    if (isOpen) {
+      wrap.classList.add('hidden');
+      aspect.innerHTML = '';
+      return;
+    }
+
+    aspect.innerHTML = `<iframe
+      src="https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0"
+      title="Vídeo demonstrativo do exercício"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+      loading="lazy"></iframe>`;
+    wrap.classList.remove('hidden');
+    wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   function renderExerciseDetailSeries() {
@@ -713,14 +771,28 @@ const UI = (() => {
     document.querySelectorAll('.modal-close').forEach((btn) => {
       btn.addEventListener('click', () => {
         document.getElementById(btn.dataset.close)?.classList.add('hidden');
+        stopEmbeddedVideo();
       });
     });
     // Fecha ao tocar fora do sheet (no fundo escurecido)
     document.querySelectorAll('.modal').forEach((modal) => {
       modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.add('hidden');
+        if (e.target === modal) {
+          modal.classList.add('hidden');
+          stopEmbeddedVideo();
+        }
       });
     });
+  }
+
+  /* Remove o iframe do vídeo (isso realmente para a reprodução/áudio,
+     diferente de só esconder o elemento com CSS). */
+  function stopEmbeddedVideo() {
+    const wrap = document.getElementById('ex-video-wrap');
+    const aspect = document.getElementById('ex-video-aspect');
+    if (!wrap) return;
+    wrap.classList.add('hidden');
+    aspect.innerHTML = '';
   }
 
   /* ================================================================

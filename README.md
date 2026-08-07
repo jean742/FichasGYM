@@ -59,13 +59,23 @@ gymapp/
   pesquisável e filtrável (grupo muscular, equipamento, nível)
 - **Pictogramas animados** (SVG, 100% original) em cada exercício mostrando
   o padrão de movimento (empurrar, puxar, agachar, dobradiça de quadril,
-  rosca, extensão, elevação lateral, core, panturrilha, cardio) — mais
-  o botão "Ver no YouTube" para quem quer a demonstração real em vídeo
-- **Gerador automático de ficha de treino**: idade, peso, altura, objetivo,
-  nível de experiência, local de treino (academia ou casa/calistenia) e
-  dias/tempo disponíveis → gera a divisão de treino (split), escolhe os
-  exercícios e sugere séries/repetições. Regenerar a ficha sempre reflete
-  exatamente os dias selecionados (os demais dias da semana são esvaziados)
+  rosca, extensão, elevação lateral, core, panturrilha, cardio)
+- **Vídeo demonstrativo embutido**: para os exercícios mais comuns (Supino
+  Reto, Agachamento Livre, Levantamento Terra, Barra Fixa, Puxada Frontal
+  e Desenvolvimento Militar), clicar em "Assistir vídeo" toca o YouTube
+  embutido logo abaixo, sem sair do app. Os demais exercícios abrem uma
+  busca no YouTube em nova aba (ainda não têm vídeo curado/verificado —
+  posso ir adicionando mais conforme você pedir)
+- **Ficha de Treino Inteligente**: idade, peso, altura, objetivo, nível de
+  experiência, local de treino (academia ou casa/calistenia) e dias/tempo
+  disponíveis → gera a divisão de treino, escolhe os exercícios (com
+  embaralhamento — duas gerações com os mesmos dados saem variadas) e
+  sugere séries/repetições. Em splits de 6-7 dias, os dias repetidos
+  (ex: "Peito e Tríceps" e "Peito e Tríceps (B)") saem com exercícios
+  diferentes sempre que a biblioteca permitir. Se você já tem um recorde
+  registrado para um exercício sorteado, a ficha sugere um peso inicial
+  baseado nesse histórico em vez de deixar em branco. Regenerar a ficha
+  sempre reflete exatamente os dias selecionados (os demais são esvaziados)
 - Checklist de séries com peso/reps/RPE, cronômetro circular de descanso
   (com som via Web Audio API e vibração quando disponível)
 - Conclusão de treino automática (quando todas as séries são marcadas)
@@ -76,17 +86,18 @@ gymapp/
 - Calendário com dias treinados/perdidos/futuros e sequência (streak)
 - Exportar/Importar backup em JSON, resetar dados, temas claro/escuro,
   6 cores de destaque
-- 100% offline via Service Worker depois da primeira visita
+- 100% offline via Service Worker depois da primeira visita (a única
+  exceção é o player de vídeo do YouTube, que precisa de internet)
 
 ## Próximos passos sugeridos (posso gerar se você quiser)
 
+- Curar vídeos demonstrativos para mais exercícios (hoje são 6 dos ~113)
 - Expandir a biblioteca de ~113 para 300+ exercícios
-- Adicionar fotos/GIFs reais dos exercícios (precisaria que você forneça
-  imagens próprias ou licenciadas — não posso reproduzir conteúdo de
-  terceiros com direitos autorais)
 - Gerar um QR Code real (atualmente mostra o link em texto) via um
   encoder leve embutido
 - Editor de treino com arrastar-e-soltar para reordenar exercícios
 - Suporte a múltiplos perfis/usuários no mesmo aparelho
 - Opção "Casa com halteres" como nível intermediário entre calistenia
   pura e academia completa
+- Progressão automática ao longo das semanas (aumentar carga/reps
+  gradualmente com base no histórico, não só no primeiro treino)

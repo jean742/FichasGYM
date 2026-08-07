@@ -28,6 +28,20 @@ const LEVELS = ['Iniciante', 'Intermediário', 'Avançado'];
    resumidos, garantindo que nenhum campo fique vazio e evitando
    duplicação de texto/estrutura entre os mais de 100 cadastros.
 ---------------------------------------------------------------- */
+/* Vídeos demonstrativos curados manualmente (verificados) para os
+   exercícios mais comuns — permitem reprodução EMBUTIDA no app.
+   Para os demais exercícios (ainda sem vídeo curado), o botão abre
+   uma busca no YouTube em nova aba. Isso evita embutir vídeos de
+   terceiros sem verificar previamente se existem/funcionam. */
+const CURATED_VIDEOS = {
+  'peito-01': 'vIGvt-vgrvY',   // Supino Reto com Barra
+  'pernas-01': 'kOgcM3NCYA0',  // Agachamento Livre com Barra
+  'costas-09': 'N3O3gtNM7GY',  // Levantamento Terra
+  'costas-01': 'oH-NrOccUOg',  // Barra Fixa (Pull-up)
+  'costas-02': 'BOW9my4J_ek',  // Puxada Frontal no Pulley
+  'ombro-01': 'dxQCyYawS-0'    // Desenvolvimento Militar com Barra
+};
+
 function buildExercise(id, name, group, secondary, level, equipment, youtubeQuery) {
   return {
     id,
@@ -41,6 +55,7 @@ function buildExercise(id, name, group, secondary, level, equipment, youtubeQuer
     mistakes: `Usar carga excessiva perdendo a amplitude completa do movimento; balançar o corpo para gerar impulso; não controlar a fase excêntrica (descida); prender a respiração durante todo o movimento.`,
     tips: `Priorize a técnica antes da carga. Faça 1-2 séries de aquecimento com peso leve, mantenha o core contraído e busque uma amplitude de movimento completa para maximizar o recrutamento muscular.`,
     youtube: `https://www.youtube.com/results?search_query=${encodeURIComponent(youtubeQuery || name)}`,
+    videoId: CURATED_VIDEOS[id] || null,
     image: `images/exercicios/${id}.jpg`
   };
 }

@@ -184,7 +184,7 @@
           <span class="empty-state-icon">🗂️</span>
           <p>Nenhum exercício adicionado para este dia.</p>
           <button class="btn-secondary" data-action="open-library">Escolher exercícios</button>
-          <button class="btn-primary" data-action="open-generator">✨ Gerar Ficha Automática</button>
+          <button class="btn-primary" data-action="open-generator">🧠 Gerar Ficha Inteligente</button>
         </div>
       </div>
 
@@ -261,10 +261,10 @@
 
       <div class="card generator-card">
         <div class="card-header">
-          <h3>✨ Ficha de Treino Automática</h3>
+          <h3>🧠 Ficha de Treino Inteligente</h3>
         </div>
-        <p class="generator-desc">Informe seus dados e a gente monta uma divisão de treino completa pra você, com exercícios, séries e repetições já sugeridos.</p>
-        <button id="btn-open-generator" class="btn-primary btn-block">Gerar Minha Ficha</button>
+        <p class="generator-desc">Informe seus dados e a gente monta uma divisão de treino completa e personalizada pra você — variada a cada geração, e que aproveita seu histórico de cargas.</p>
+        <button id="btn-open-generator" class="btn-primary btn-block">Gerar Ficha Inteligente</button>
       </div>
 
       <div class="card">
@@ -383,7 +383,11 @@
 
       <div class="ex-media">
         <div id="ex-detail-img" class="pictogram-detail"></div>
-        <button id="ex-btn-youtube" class="btn-youtube" aria-label="Ver no YouTube">▶ YouTube</button>
+        <button id="ex-btn-youtube" class="btn-youtube" aria-label="Ver vídeo">▶ YouTube</button>
+      </div>
+
+      <div id="ex-video-wrap" class="ex-video-wrap hidden">
+        <div class="ex-video-aspect" id="ex-video-aspect"></div>
       </div>
 
       <div class="ex-tags">
@@ -456,11 +460,11 @@
     <div class="modal-sheet modal-sheet-full">
       <div class="modal-handle"></div>
       <div class="modal-header">
-        <h3>✨ Gerar Ficha Automática</h3>
+        <h3>🧠 Gerar Ficha Inteligente</h3>
         <button class="modal-close" data-close="modal-generator" aria-label="Fechar">✕</button>
       </div>
 
-      <p class="generator-desc">Preencha seus dados abaixo. Vamos montar uma divisão de treino (split) e escolher os exercícios de acordo com seu objetivo e o tempo que você tem disponível.</p>
+      <p class="generator-desc">Preencha seus dados abaixo. Vamos montar uma divisão de treino (split) e escolher os exercícios de acordo com seu objetivo, nível e tempo disponível — variando a seleção a cada geração e aproveitando seus recordes já registrados.</p>
 
       <label class="field">
         <span>Idade</span>

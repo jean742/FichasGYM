@@ -127,19 +127,39 @@ const Generator = (() => {
     return location === 'casa' ? HOME_EQUIPMENT : null; // null = sem restrição
   }
 
+  /* Embaralha um array (Fisher-Yates) sem alterar o original — usado
+     para que a mesma consulta gere fichas variadas a cada geração,
+     em vez de sempre montar exatamente a mesma sequência fixa. */
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
   /* ----------------------------------------------------------------
      Seleciona N exercícios distribuídos entre os grupos musculares
-     do dia, priorizando exercícios compostos (que aparecem primeiro
-     no cadastro de cada grupo) antes dos de isolamento.
+     do dia. Dois fatores tornam a ficha mais "inteligente" e variada:
+     1) A ordem dentro de cada grupo é embaralhada — duas gerações
+        seguidas não saem idênticas, mesmo com os mesmos parâmetros.
+     2) Exercícios já usados em OUTRO dia desta mesma ficha (ex: no
+        split de 6 dias, "Peito e Tríceps" e "Peito e Tríceps (B)")
+        são deixados por último — assim os dois dias saem com
+        exercícios diferentes sempre que a biblioteca permitir.
   ---------------------------------------------------------------- */
-  function pickExercisesForDay(groups, count, allowedLevels, allowedEquipment) {
-    const pool = groups.map((group) =>
-      window.EXERCISES.filter((ex) =>
+  function pickExercisesForDay(groups, count, allowedLevels, allowedEquipment, usedIds) {
+    const pool = groups.map((group) => {
+      const candidates = window.EXERCISES.filter((ex) =>
         ex.group === group &&
         allowedLevels.includes(ex.level) &&
         (!allowedEquipment || allowedEquipment.includes(ex.equipment))
-      )
-    );
+      );
+      const fresh = shuffle(candidates.filter((ex) => !usedIds.has(ex.id)));
+      const repeated = shuffle(candidates.filter((ex) => usedIds.has(ex.id)));
+      return [...fresh, ...repeated];
+    });
 
     const picked = [];
     let round = 0;
@@ -193,29 +213,36 @@ const Generator = (() => {
     const allowedLevels = resolveAllowedLevels(experience, age, goal);
     const allowedEquipment = resolveAllowedEquipment(location);
 
+    // Acompanha quais exercícios já foram usados em dias anteriores
+    // desta mesma ficha, para variar dias repetidos do split (ex: 6 dias)
+    const usedIds = new Set();
+
     const plan = selectedDays.map((dayCode, index) => {
       const splitDay = template[index % template.length];
 
       // Reserva 1 vaga para cardio extra no fim do dia se o objetivo pedir
       const strengthSlots = goalParams.cardioExtra ? Math.max(1, exerciseCount - 1) : exerciseCount;
 
-      let dayExercises = pickExercisesForDay(splitDay.groups, strengthSlots, allowedLevels, allowedEquipment)
-        .map((ex) => ({
-          exerciseId: ex.id,
-          name: ex.name,
-          group: ex.group,
-          equipment: ex.equipment,
-          image: ex.image,
-          notes: '',
-          sets: buildDefaultSets(goalParams.sets, goalParams.reps)
-        }));
+      const chosen = pickExercisesForDay(splitDay.groups, strengthSlots, allowedLevels, allowedEquipment, usedIds);
+      chosen.forEach((ex) => usedIds.add(ex.id));
+
+      let dayExercises = chosen.map((ex) => ({
+        exerciseId: ex.id,
+        name: ex.name,
+        group: ex.group,
+        equipment: ex.equipment,
+        image: ex.image,
+        notes: '',
+        sets: buildDefaultSets(goalParams.sets, goalParams.reps)
+      }));
 
       if (goalParams.cardioExtra) {
-        const cardioOptions = window.EXERCISES.filter((ex) =>
+        const cardioPool = shuffle(window.EXERCISES.filter((ex) =>
           ex.group === 'Cardio' && (!allowedEquipment || allowedEquipment.includes(ex.equipment))
-        );
-        const cardioPick = cardioOptions[index % Math.max(1, cardioOptions.length)];
+        ));
+        const cardioPick = cardioPool.find((ex) => !usedIds.has(ex.id)) || cardioPool[0];
         if (cardioPick) {
+          usedIds.add(cardioPick.id);
           dayExercises.push({
             exerciseId: cardioPick.id,
             name: cardioPick.name,
@@ -235,6 +262,26 @@ const Generator = (() => {
   }
 
   /* ----------------------------------------------------------------
+     Deixa a ficha mais "inteligente": se a pessoa já tem um recorde
+     pessoal registrado para um exercício sorteado, sugere um peso
+     inicial (90% do recorde) em vez de deixar o campo em branco —
+     em vez de sempre começar do zero, a ficha "lembra" do progresso.
+  ---------------------------------------------------------------- */
+  async function applyPersonalRecords(plan) {
+    for (const day of plan) {
+      for (const ex of day.exercises) {
+        if (!ex.exerciseId) continue;
+        const record = await window.DB.getRecord(ex.exerciseId);
+        if (record && record.maxWeight) {
+          const suggested = Math.round(record.maxWeight * 0.9 * 10) / 10;
+          ex.sets.forEach((s) => { if (s.weight === null) s.weight = suggested; });
+          ex.notes = ex.notes || 'Peso sugerido com base no seu recorde anterior';
+        }
+      }
+    }
+  }
+
+  /* ----------------------------------------------------------------
      Gera a ficha E já salva no IndexedDB.
      IMPORTANTE: a ficha gerada reflete EXATAMENTE os dias marcados —
      os dias da semana que NÃO foram selecionados são explicitamente
@@ -244,6 +291,7 @@ const Generator = (() => {
   ---------------------------------------------------------------- */
   async function generateAndSave(params) {
     const plan = generatePlan(params);
+    await applyPersonalRecords(plan);
     const selectedSet = new Set(params.selectedDays);
 
     for (const dayPlan of plan) {

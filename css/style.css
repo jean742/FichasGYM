@@ -521,6 +521,16 @@ h4 { font-size: 14px; }
 .tag { background: var(--bg-elev-2); color: var(--text-dim); font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: var(--r-full); }
 .ex-desc { font-size: 13.5px; color: var(--text-dim); line-height: 1.6; }
 
+/* Player de vídeo embutido (abre "de baixo" do botão quando disponível) */
+.ex-video-wrap { animation: sheet-up 0.25s ease; }
+.ex-video-aspect {
+  position: relative; width: 100%; padding-top: 56.25%; /* 16:9 */
+  border-radius: var(--r-md); overflow: hidden; background: #000;
+}
+.ex-video-aspect iframe {
+  position: absolute; inset: 0; width: 100%; height: 100%; border: 0;
+}
+
 .ex-accordion details {
   border-top: 1px solid var(--border); padding: 10px 0; font-size: 13px; color: var(--text-dim);
 }
