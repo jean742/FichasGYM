@@ -51,6 +51,7 @@ const UI = (() => {
     bindHomeScreen();
     bindGenerator();
     bindNutrition();
+    bindAccount();
 
     populateLibraryFilters();
 
@@ -91,6 +92,7 @@ const UI = (() => {
     if (screenName === 'home') await renderHome();
     if (screenName === 'progress') await renderProgressScreen();
     if (screenName === 'calendar') { await computeStreakAndRender(); renderCalendar(state.calendarDate); }
+    if (screenName === 'settings') refreshAccountUI();
   }
 
   /* ================================================================
@@ -1211,7 +1213,54 @@ const UI = (() => {
     document.querySelectorAll('#color-swatches .swatch').forEach((b) => b.classList.toggle('active', b.dataset.color === settings.accentColor));
   }
 
-  return { init, switchScreen, showToast, state };
+  /* ================================================================
+     CONTA E SINCRONIZAÇÃO (card em Configurações)
+  ================================================================ */
+  function bindAccount() {
+    document.getElementById('btn-go-login')?.addEventListener('click', async () => {
+      if (window.Auth) await Auth.signOutUser().catch(() => {});
+      window.location.reload();
+    });
+
+    document.getElementById('btn-logout')?.addEventListener('click', async () => {
+      const confirmed = confirm('Sair da conta? Você pode entrar de novo a qualquer momento para acessar seus dados.');
+      if (!confirmed) return;
+      await Auth.signOutUser();
+      window.location.reload();
+    });
+  }
+
+  function refreshAccountUI() {
+    const badge = document.getElementById('sync-status-badge');
+    const loggedOutBlock = document.getElementById('account-logged-out');
+    const loggedInBlock = document.getElementById('account-logged-in');
+    const notConfiguredBlock = document.getElementById('account-not-configured');
+    if (!badge) return;
+
+    [loggedOutBlock, loggedInBlock, notConfiguredBlock].forEach((el) => el?.classList.add('hidden'));
+
+    if (!window.FIREBASE_IS_CONFIGURED) {
+      badge.textContent = 'Só neste aparelho';
+      badge.className = 'badge badge-local';
+      notConfiguredBlock?.classList.remove('hidden');
+      return;
+    }
+
+    const user = window.Auth?.getUser?.();
+    if (user) {
+      badge.textContent = 'Sincronizado ☁️';
+      badge.className = 'badge badge-cloud';
+      loggedInBlock?.classList.remove('hidden');
+      const emailEl = document.getElementById('account-email');
+      if (emailEl) emailEl.textContent = user.email || '--';
+    } else {
+      badge.textContent = 'Desconectado';
+      badge.className = 'badge badge-local';
+      loggedOutBlock?.classList.remove('hidden');
+    }
+  }
+
+  return { init, switchScreen, showToast, state, refreshAccountUI };
 })();
 
 window.UI = UI;

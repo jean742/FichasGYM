@@ -62,6 +62,45 @@
   </div>
 
   <!-- ==========================================================
+       TELA DE LOGIN (só aparece se o Firebase estiver configurado)
+       Garante que os dados fiquem vinculados à conta da pessoa,
+       para sincronizar entre qualquer aparelho.
+  ========================================================== -->
+  <div id="login-screen" class="login-screen hidden">
+    <div class="login-card">
+      <div class="splash-logo login-logo">
+        <span class="splash-logo-icon">⚡</span>
+        <span class="splash-logo-text">GYM<strong>PRO</strong></span>
+      </div>
+      <p class="login-subtitle">Entre para sincronizar seu treino em qualquer aparelho</p>
+
+      <div class="segmented login-tabs" id="login-tabs">
+        <button type="button" class="segmented-btn active" data-mode="signin">Entrar</button>
+        <button type="button" class="segmented-btn" data-mode="signup">Criar conta</button>
+      </div>
+
+      <form id="login-form" class="login-form">
+        <label class="field">
+          <span>E-mail</span>
+          <input id="login-email" type="email" autocomplete="email" placeholder="voce@email.com" required>
+        </label>
+        <label class="field">
+          <span>Senha</span>
+          <input id="login-password" type="password" autocomplete="current-password" placeholder="Mínimo 6 caracteres" minlength="6" required>
+        </label>
+
+        <p id="login-error" class="generator-error hidden"></p>
+
+        <button type="submit" id="login-submit" class="btn-primary btn-large btn-block">Entrar</button>
+      </form>
+
+      <button id="login-forgot" class="login-forgot-link">Esqueci minha senha</button>
+
+      <p class="login-footnote">Seus dados de treino ficam salvos na sua conta e acessíveis de qualquer celular ou computador onde você fizer login.</p>
+    </div>
+  </div>
+
+  <!-- ==========================================================
        CONTAINER DE TOASTS (notificações rápidas)
        Ex: "Novo Recorde!", "Backup exportado", "Dados salvos"
   ========================================================== -->
@@ -342,6 +381,24 @@
         </label>
       </div>
 
+      <div class="card" id="account-card">
+        <div class="card-header">
+          <h3>Conta e Sincronização</h3>
+          <span class="badge" id="sync-status-badge">--</span>
+        </div>
+        <div id="account-logged-out" class="hidden">
+          <p class="about-text">Você está usando o app sem login — os dados ficam salvos só neste aparelho.</p>
+          <button id="btn-go-login" class="btn-secondary btn-block">Entrar / Criar conta</button>
+        </div>
+        <div id="account-logged-in" class="hidden">
+          <p class="about-text">Conectado como <strong id="account-email">--</strong>. Seus dados estão sincronizados nesta conta.</p>
+          <button id="btn-logout" class="btn-danger btn-block">Sair da Conta</button>
+        </div>
+        <div id="account-not-configured" class="hidden">
+          <p class="about-text">A sincronização entre dispositivos ainda não foi configurada neste app (veja o README, seção "Sincronização"). Por enquanto, os dados ficam salvos só neste aparelho.</p>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-header"><h3>Dados</h3></div>
         <button id="btn-export-json" class="btn-secondary btn-block">Exportar Backup (JSON)</button>
@@ -352,7 +409,7 @@
 
       <div class="card">
         <div class="card-header"><h3>Sobre</h3></div>
-        <p class="about-text">Gym Pro — v1.0.0<br>100% offline • Seus dados nunca saem do seu aparelho.</p>
+        <p class="about-text" id="about-text">Gym Pro — v1.0.0<br>Funciona offline • Sincronização entre dispositivos disponível.</p>
       </div>
     </section>
 
@@ -658,6 +715,17 @@
 <!-- ============================================================
      SCRIPTS — ordem de carregamento importa (dependências)
 ============================================================ -->
+<!-- Firebase SDK (compat) — só usado se você configurar js/firebase-config.js.
+     Requisitos de conectividade: sem isso, tudo continua funcionando
+     100% local (veja js/db.js). -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js" defer></script>
+
+<script src="js/firebase-config.js" defer></script>
+<script src="js/auth.js" defer></script>
+<script src="js/db-local.js" defer></script>
+<script src="js/db-cloud.js" defer></script>
 <script src="js/db.js" defer></script>
 <script src="js/pictograms.js" defer></script>
 <script src="js/exercises.js" defer></script>

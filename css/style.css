@@ -683,6 +683,31 @@ h4 { font-size: 14px; }
 }
 
 /* ----------------------------------------------------------------
+   20. LOGIN / SINCRONIZAÇÃO ENTRE DISPOSITIVOS
+---------------------------------------------------------------- */
+.login-screen {
+  position: fixed; inset: 0; z-index: 950;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; background: radial-gradient(circle at 50% 20%, #14161c 0%, #0A0A0C 70%);
+}
+.login-card {
+  width: 100%; max-width: 360px; background: var(--bg-elev-1);
+  border: 1px solid var(--border); border-radius: var(--r-lg);
+  padding: 28px 22px; box-shadow: var(--shadow-md);
+  display: flex; flex-direction: column; align-items: stretch; gap: 14px;
+}
+.login-logo { justify-content: center; margin-bottom: 2px; }
+.login-subtitle { text-align: center; color: var(--text-dim); font-size: 13px; margin-bottom: 4px; }
+.login-tabs { width: 100%; }
+.login-tabs .segmented-btn { flex: 1; text-align: center; }
+.login-form { display: flex; flex-direction: column; }
+.login-forgot-link { text-align: center; font-size: 12.5px; color: var(--accent); font-weight: 600; padding: 4px; }
+.login-footnote { text-align: center; font-size: 11px; color: var(--text-faint); line-height: 1.6; margin-top: 4px; }
+
+#sync-status-badge.badge-cloud { background: var(--success-dim); color: var(--success); }
+#sync-status-badge.badge-local { background: var(--bg-elev-2); color: var(--text-faint); }
+
+/* ----------------------------------------------------------------
    19. ACESSIBILIDADE / RESPONSIVO
 ---------------------------------------------------------------- */
 button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {

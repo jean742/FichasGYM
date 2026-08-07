@@ -52,8 +52,73 @@ gymapp/
 └── images/                → avatar e imagem placeholder dos exercícios
 ```
 
+## Sincronização entre dispositivos (opcional)
+
+Por padrão, o app funciona 100% local (IndexedDB) — cada aparelho tem seus
+próprios dados. Se você quiser acompanhar o treino de qualquer aparelho
+(celular, computador, etc.), dá pra ativar sincronização via **Firebase**
+(gratuito para uso pessoal). O app detecta sozinho se está configurado —
+sem configurar, continua funcionando local normalmente.
+
+### Passo a passo
+
+1. **Criar o projeto**: acesse [console.firebase.google.com](https://console.firebase.google.com),
+   clique em "Adicionar projeto", dê um nome (ex: "gym-pro") e siga o assistente
+   (pode desativar o Google Analytics, não é necessário).
+
+2. **Ativar o login por e-mail/senha**: no menu lateral, vá em
+   **Build → Authentication → Get started**. Na aba "Sign-in method",
+   ative o provedor **"E-mail/senha"**.
+
+3. **Criar o banco de dados**: no menu lateral, vá em
+   **Build → Firestore Database → Create database**. Escolha
+   **"Start in production mode"** e a região mais próxima de você
+   (ex: `southamerica-east1` para o Brasil).
+
+4. **Configurar as regras de segurança**: ainda no Firestore, vá na aba
+   **"Regras"** (Rules) e substitua o conteúdo pelo que está no arquivo
+   `firestore.rules` deste projeto — isso garante que cada pessoa só
+   acesse os próprios dados. Clique em "Publicar".
+
+5. **Registrar o app Web**: na página inicial do projeto (ícone de
+   engrenagem → "Configurações do projeto"), role até "Seus apps" e
+   clique no ícone `</>` (Web). Dê um apelido (ex: "gym-pro-web") e
+   clique em "Registrar app". **Não** marque a opção de Firebase Hosting.
+
+6. **Copiar as chaves**: o Firebase vai mostrar um bloco de código
+   `firebaseConfig` com `apiKey`, `authDomain`, `projectId`, etc. Copie
+   esses valores e cole no arquivo `js/firebase-config.js` do projeto,
+   substituindo os textos "COLE_AQUI_...".
+
+7. **Subir a alteração pro GitHub** (veja o passo a passo do GitHub
+   Desktop mais acima nesta conversa, ou no seu repositório): commit +
+   push do arquivo `js/firebase-config.js` alterado.
+
+8. **Testar**: abra o app (pelo link do GitHub Pages, se tiver ativado,
+   ou localmente). Uma tela de login vai aparecer — crie uma conta com
+   e-mail e senha. Repita em outro aparelho com o mesmo e-mail/senha e
+   confirme que os dados aparecem iguais.
+
+### Notas importantes
+
+- O plano gratuito do Firebase (Spark) é bem generoso para uso pessoal
+  (50 mil leituras/dia, 20 mil escritas/dia) — não deve gerar cobrança
+  para um único usuário.
+- O arquivo `js/firebase-config.js` é seguro de deixar público no
+  GitHub — essas chaves identificam o projeto, mas quem protege os
+  dados de verdade são as regras de segurança do passo 4.
+- O Firestore já vem com cache offline embutido: se a internet cair no
+  meio de um treino, o app continua funcionando normalmente e sincroniza
+  sozinho assim que a conexão voltar.
+- Esqueceu a senha? A tela de login tem um link "Esqueci minha senha"
+  que envia um e-mail de redefinição.
+
 ## O que já funciona
 
+- **Sincronização entre dispositivos** (opcional, via Firebase): crie
+  uma conta com e-mail/senha e acesse os mesmos treinos, histórico,
+  água e recordes de qualquer aparelho. Sem configurar, o app funciona
+  100% local como antes — veja a seção acima para ativar
 - Navegação entre 5 telas (Início, Treinos, Progresso, Calendário, Ajustes)
 - Cadastro de treino por dia da semana, com biblioteca de ~113 exercícios
   pesquisável e filtrável (grupo muscular, equipamento, nível)
