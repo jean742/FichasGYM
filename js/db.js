@@ -9,7 +9,7 @@
 const DB = (() => {
 
   const DB_NAME = 'GymProDB';
-  const DB_VERSION = 1;
+  const DB_VERSION = 2;
 
   // Nomes das object stores (equivalentes a "tabelas")
   const STORES = {
@@ -18,7 +18,8 @@ const DB = (() => {
     WORKOUT_PLAN: 'workoutPlan',  // treino planejado por dia da semana (keyPath: day)
     HISTORY: 'history',           // histórico de treinos concluídos (autoIncrement)
     BODYWEIGHT: 'bodyweight',     // log de peso corporal ao longo do tempo (autoIncrement)
-    RECORDS: 'records'            // recordes pessoais por exercício (keyPath: exerciseId)
+    RECORDS: 'records',            // recordes pessoais por exercício (keyPath: exerciseId)
+    WATERLOG: 'waterLog'           // consumo de água por dia (keyPath: date, 1 registro/dia)
   };
 
   let dbInstance = null;
@@ -55,6 +56,9 @@ const DB = (() => {
         }
         if (!db.objectStoreNames.contains(STORES.RECORDS)) {
           db.createObjectStore(STORES.RECORDS, { keyPath: 'exerciseId' });
+        }
+        if (!db.objectStoreNames.contains(STORES.WATERLOG)) {
+          db.createObjectStore(STORES.WATERLOG, { keyPath: 'date' });
         }
       };
 
@@ -228,21 +232,48 @@ const DB = (() => {
   }
 
   /* ================================================================
+     API PÚBLICA — HIDRATAÇÃO (consumo de água por dia)
+  ================================================================ */
+  function todayDateKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  async function getWaterToday() {
+    const entry = await get(STORES.WATERLOG, todayDateKey());
+    return entry ? entry.ml : 0;
+  }
+
+  async function addWaterMl(amountMl) {
+    const key = todayDateKey();
+    const current = await get(STORES.WATERLOG, key);
+    const newTotal = Math.max(0, (current ? current.ml : 0) + amountMl);
+    await put(STORES.WATERLOG, { date: key, ml: newTotal });
+    return newTotal;
+  }
+
+  async function resetWaterToday() {
+    await put(STORES.WATERLOG, { date: todayDateKey(), ml: 0 });
+    return 0;
+  }
+
+  /* ================================================================
      API PÚBLICA — BACKUP / RESTAURAÇÃO / RESET
   ================================================================ */
   async function exportAll() {
-    const [profile, settings, plans, history, bodyweight, records] = await Promise.all([
+    const [profile, settings, plans, history, bodyweight, records, waterLog] = await Promise.all([
       getProfile(),
       getSettings(),
       getAllWorkoutDays(),
       getHistory(),
       getBodyWeightLog(),
-      getAll(STORES.RECORDS)
+      getAll(STORES.RECORDS),
+      getAll(STORES.WATERLOG)
     ]);
     return {
       exportedAt: new Date().toISOString(),
       version: DB_VERSION,
-      profile, settings, plans, history, bodyweight, records
+      profile, settings, plans, history, bodyweight, records, waterLog
     };
   }
 
@@ -255,6 +286,7 @@ const DB = (() => {
     await clearStore(STORES.HISTORY);
     await clearStore(STORES.BODYWEIGHT);
     await clearStore(STORES.RECORDS);
+    await clearStore(STORES.WATERLOG);
 
     if (data.profile) await put(STORES.PROFILE, { ...data.profile, id: 1 });
     if (data.settings) await put(STORES.SETTINGS, { ...data.settings, id: 1 });
@@ -262,6 +294,7 @@ const DB = (() => {
     if (Array.isArray(data.history)) for (const h of data.history) await put(STORES.HISTORY, h);
     if (Array.isArray(data.bodyweight)) for (const b of data.bodyweight) await put(STORES.BODYWEIGHT, b);
     if (Array.isArray(data.records)) for (const r of data.records) await put(STORES.RECORDS, r);
+    if (Array.isArray(data.waterLog)) for (const w of data.waterLog) await put(STORES.WATERLOG, w);
 
     return true;
   }
@@ -273,6 +306,7 @@ const DB = (() => {
     await clearStore(STORES.HISTORY);
     await clearStore(STORES.BODYWEIGHT);
     await clearStore(STORES.RECORDS);
+    await clearStore(STORES.WATERLOG);
     return true;
   }
 
@@ -288,6 +322,7 @@ const DB = (() => {
     addHistoryEntry, getHistory, getHistoryByDateRange,
     addBodyWeight, getBodyWeightLog,
     getRecord, setRecord, checkAndUpdateRecord,
+    getWaterToday, addWaterMl, resetWaterToday,
     exportAll, importAll, resetAll
   };
 })();

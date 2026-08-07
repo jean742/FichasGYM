@@ -149,6 +149,40 @@
         </div>
       </div>
 
+      <!-- Nutrição, água e cardio -->
+      <div class="card nutrition-card" id="nutrition-card">
+        <div class="card-header">
+          <h3>🥗 Nutrição, Água e Cardio</h3>
+          <span class="badge badge-accent" id="nutrition-goal-badge">--</span>
+        </div>
+        <div class="nutrition-quick-grid">
+          <div class="nutrition-quick-tile">
+            <span class="stat-icon">🥩</span>
+            <span class="stat-value" id="nutrition-protein-quick">-- g</span>
+            <span class="stat-label">proteína/dia</span>
+          </div>
+          <div class="nutrition-quick-tile">
+            <span class="stat-icon">💧</span>
+            <span class="stat-value" id="nutrition-water-quick">-- L</span>
+            <span class="stat-label">água/dia</span>
+          </div>
+        </div>
+
+        <div class="water-tracker">
+          <div class="progress-bar-track">
+            <div id="water-progress-fill" class="progress-bar-fill water-fill" style="width:0%"></div>
+          </div>
+          <p class="progress-caption"><span id="water-consumed-label">0 ml</span> de <span id="water-target-label">-- ml</span> hoje</p>
+          <div class="water-buttons">
+            <button class="btn-secondary water-btn" data-ml="250">+250ml</button>
+            <button class="btn-secondary water-btn" data-ml="500">+500ml</button>
+            <button class="btn-icon-round small" id="btn-water-reset" aria-label="Zerar água de hoje">⟲</button>
+          </div>
+        </div>
+
+        <button id="btn-open-nutrition" class="btn-secondary btn-block">Ver recomendações completas</button>
+      </div>
+
       <!-- Botão principal -->
       <button id="btn-start-workout" class="btn-primary btn-large btn-start">
         Iniciar Treino de Hoje
@@ -541,6 +575,61 @@
   </div>
 
   <!-- ==========================================================
+       MODAL — NUTRIÇÃO, ÁGUA E CARDIO (recomendações por objetivo)
+  ========================================================== -->
+  <div id="modal-nutrition" class="modal hidden">
+    <div class="modal-sheet modal-sheet-full">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h3>🥗 Nutrição, Água e Cardio</h3>
+        <button class="modal-close" data-close="modal-nutrition" aria-label="Fechar">✕</button>
+      </div>
+
+      <p class="generator-desc">Recomendações calculadas a partir do seu peso e objetivo cadastrados (<span id="nutrition-context">--</span>). São diretrizes gerais, não uma prescrição individual.</p>
+
+      <div class="card nutrition-section">
+        <div class="card-header"><h4>🏃 Cardio recomendado</h4></div>
+        <div class="nutrition-cardio-grid">
+          <div><span id="nut-cardio-type">--</span><label>Tipo</label></div>
+          <div><span id="nut-cardio-freq">--</span><label>Frequência</label></div>
+          <div><span id="nut-cardio-duration">--</span><label>Duração</label></div>
+        </div>
+        <p class="ex-desc" id="nut-cardio-desc">--</p>
+      </div>
+
+      <div class="card nutrition-section">
+        <div class="card-header"><h4>🥩 Proteína diária</h4></div>
+        <p class="nutrition-big-number" id="nut-protein-number">-- a -- g/dia</p>
+        <p class="ex-desc" id="nut-protein-desc">--</p>
+      </div>
+
+      <div class="card nutrition-section">
+        <div class="card-header"><h4>💧 Água diária</h4></div>
+        <p class="nutrition-big-number" id="nut-water-number">-- L/dia</p>
+        <div class="progress-bar-track">
+          <div id="water-progress-fill-modal" class="progress-bar-fill water-fill" style="width:0%"></div>
+        </div>
+        <p class="progress-caption"><span id="water-consumed-label-modal">0 ml</span> de <span id="water-target-label-modal">-- ml</span> hoje</p>
+        <div class="water-buttons">
+          <button class="btn-secondary water-btn" data-ml="250">+250ml</button>
+          <button class="btn-secondary water-btn" data-ml="500">+500ml</button>
+          <button class="btn-icon-round small" id="btn-water-reset-modal" aria-label="Zerar água de hoje">⟲</button>
+        </div>
+      </div>
+
+      <div class="card nutrition-section">
+        <div class="card-header"><h4>🍽️ Estratégia alimentar</h4></div>
+        <p class="ex-desc" id="nut-calorie-strategy">--</p>
+        <ul class="nutrition-tips-list" id="nut-meal-tips"></ul>
+      </div>
+
+      <p class="nutrition-disclaimer">
+        ⚠️ Essas recomendações são orientações gerais baseadas em práticas comuns de nutrição esportiva — não substituem uma avaliação individual com nutricionista ou médico, principalmente se você tiver restrições alimentares, condições de saúde específicas, ou objetivos muito agressivos de perda/ganho de peso.
+      </p>
+    </div>
+  </div>
+
+  <!-- ==========================================================
        OVERLAY — TREINO CONCLUÍDO (celebração)
   ========================================================== -->
   <div id="overlay-complete" class="overlay hidden">
@@ -573,6 +662,7 @@
 <script src="js/pictograms.js" defer></script>
 <script src="js/exercises.js" defer></script>
 <script src="js/generator.js" defer></script>
+<script src="js/nutrition.js" defer></script>
 <script src="js/timer.js" defer></script>
 <script src="js/charts.js" defer></script>
 <script src="js/ui.js" defer></script>

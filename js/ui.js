@@ -50,6 +50,7 @@ const UI = (() => {
     bindCalendarNav();
     bindHomeScreen();
     bindGenerator();
+    bindNutrition();
 
     populateLibraryFilters();
 
@@ -162,10 +163,107 @@ const UI = (() => {
       const dateStr = new Date(last.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
       lastWorkoutEl.innerHTML = `<strong>${last.workoutName || 'Treino'}</strong> — ${dateStr} · ${formatNumber(last.volume || 0)} kg · ${Math.round((last.durationSeconds || 0) / 60)} min`;
     }
+
+    await renderNutritionQuick(profile);
   }
 
   function goalLabel(goal) {
     return { hipertrofia: 'Hipertrofia', emagrecimento: 'Emagrecimento', forca: 'Força', resistencia: 'Resistência', saude: 'Saúde Geral' }[goal] || 'Hipertrofia';
+  }
+
+  /* ================================================================
+     NUTRIÇÃO, ÁGUA E CARDIO
+  ================================================================ */
+  function bindNutrition() {
+    document.getElementById('btn-open-nutrition')?.addEventListener('click', openNutritionModal);
+
+    // Botões de água existem em dois lugares (card da Início + modal) —
+    // ambos usam a mesma classe, então um único binding cobre os dois.
+    document.querySelectorAll('.water-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const ml = parseInt(btn.dataset.ml, 10) || 0;
+        const total = await DB.addWaterMl(ml);
+        const profile = await DB.getProfile();
+        updateWaterUI(total, Nutrition.computePlan(profile).waterMl);
+        showToast(`+${ml}ml registrados 💧`, 'success');
+      });
+    });
+
+    document.getElementById('btn-water-reset')?.addEventListener('click', resetWater);
+    document.getElementById('btn-water-reset-modal')?.addEventListener('click', resetWater);
+  }
+
+  async function resetWater() {
+    const confirmed = confirm('Zerar o consumo de água registrado hoje?');
+    if (!confirmed) return;
+    await DB.resetWaterToday();
+    const profile = await DB.getProfile();
+    updateWaterUI(0, Nutrition.computePlan(profile).waterMl);
+  }
+
+  /* Atualiza a barra de progresso e os textos de água nos DOIS lugares
+     onde ela aparece (card da Início e dentro do modal), mantendo tudo
+     sincronizado sem precisar re-renderizar a tela inteira. */
+  function updateWaterUI(consumedMl, targetMl) {
+    const target = targetMl || 2000;
+    const percent = Math.min(100, Math.round((consumedMl / target) * 100));
+
+    const fillEls = [document.getElementById('water-progress-fill'), document.getElementById('water-progress-fill-modal')];
+    const consumedEls = [document.getElementById('water-consumed-label'), document.getElementById('water-consumed-label-modal')];
+    const targetEls = [document.getElementById('water-target-label'), document.getElementById('water-target-label-modal')];
+
+    fillEls.forEach((el) => { if (el) el.style.width = `${percent}%`; });
+    consumedEls.forEach((el) => { if (el) el.textContent = `${formatNumber(consumedMl)} ml`; });
+    targetEls.forEach((el) => { if (el) el.textContent = `${formatNumber(target)} ml`; });
+  }
+
+  /* Atualiza só o resumo rápido (card da tela Início) */
+  async function renderNutritionQuick(profile) {
+    const plan = Nutrition.computePlan(profile);
+    const badge = document.getElementById('nutrition-goal-badge');
+    if (badge) badge.textContent = plan.goalLabel;
+
+    const proteinEl = document.getElementById('nutrition-protein-quick');
+    const waterEl = document.getElementById('nutrition-water-quick');
+    if (proteinEl) proteinEl.textContent = plan.proteinMin ? `${plan.proteinMin}–${plan.proteinMax} g` : '-- g';
+    if (waterEl) waterEl.textContent = plan.waterLiters ? `${plan.waterLiters} L` : '-- L';
+
+    const consumed = await DB.getWaterToday();
+    updateWaterUI(consumed, plan.waterMl);
+  }
+
+  /* Preenche o modal completo com cardio, proteína, água e dicas de dieta */
+  async function openNutritionModal() {
+    const profile = await DB.getProfile();
+    const plan = Nutrition.computePlan(profile);
+
+    document.getElementById('nutrition-context').textContent =
+      plan.weight ? `${plan.goalLabel} · ${plan.weight} kg` : `${plan.goalLabel} · peso não cadastrado`;
+
+    document.getElementById('nut-cardio-type').textContent = plan.cardio.type;
+    document.getElementById('nut-cardio-freq').textContent = plan.cardio.frequency;
+    document.getElementById('nut-cardio-duration').textContent = plan.cardio.duration;
+    document.getElementById('nut-cardio-desc').textContent = plan.cardio.description;
+
+    document.getElementById('nut-protein-number').textContent = plan.proteinMin
+      ? `${plan.proteinMin} a ${plan.proteinMax} g/dia`
+      : 'Cadastre seu peso nos Ajustes para calcular';
+    document.getElementById('nut-protein-desc').textContent =
+      'Faixa baseada no seu peso corporal e objetivo. Distribua ao longo do dia em várias refeições para melhor aproveitamento.';
+
+    document.getElementById('nut-water-number').textContent = plan.waterLiters
+      ? `${plan.waterLiters} L/dia`
+      : 'Cadastre seu peso nos Ajustes para calcular';
+
+    document.getElementById('nut-calorie-strategy').textContent = plan.calorieStrategy;
+
+    const tipsList = document.getElementById('nut-meal-tips');
+    tipsList.innerHTML = plan.mealTips.map((tip) => `<li>${tip}</li>`).join('');
+
+    const consumed = await DB.getWaterToday();
+    updateWaterUI(consumed, plan.waterMl);
+
+    document.getElementById('modal-nutrition').classList.remove('hidden');
   }
 
   function calcIMC(weight, height) {
@@ -1004,14 +1102,12 @@ const UI = (() => {
     document.getElementById('btn-save-profile')?.addEventListener('click', async () => {
       const existing = await DB.getProfile();
       const profile = {
+        ...existing,
         name: document.getElementById('cfg-name').value,
         age: parseInt(document.getElementById('cfg-age').value, 10) || null,
         weight: parseFloat(document.getElementById('cfg-weight').value) || null,
         height: parseFloat(document.getElementById('cfg-height').value) || null,
-        goal: document.getElementById('cfg-goal').value,
-        weekDaysGoal: existing.weekDaysGoal || 5,
-        sessionMinutes: existing.sessionMinutes || 60,
-        photo: existing.photo || ''
+        goal: document.getElementById('cfg-goal').value
       };
       await DB.saveProfile(profile);
       showToast('Perfil salvo com sucesso', 'success');

@@ -76,6 +76,15 @@ gymapp/
   registrado para um exercício sorteado, a ficha sugere um peso inicial
   baseado nesse histórico em vez de deixar em branco. Regenerar a ficha
   sempre reflete exatamente os dias selecionados (os demais são esvaziados)
+- **Nutrição, Água e Cardio** (card na Início + modal completo): a partir
+  do peso e objetivo cadastrados, calcula automaticamente faixa de
+  proteína diária (g/kg conforme o objetivo), meta de água (ml/kg + bônus
+  para quem treina 5+ dias/semana), recomendação de cardio (tipo,
+  frequência e duração — leve para hipertrofia/força, misto LISS+HIIT
+  para emagrecimento, etc.) e dicas de estratégia alimentar. Inclui um
+  rastreador de água do dia com botões +250ml/+500ml e barra de progresso,
+  sincronizado entre a Início e o modal. Sempre com aviso de que são
+  diretrizes gerais, não substituem nutricionista/médico
 - Checklist de séries com peso/reps/RPE, cronômetro circular de descanso
   (com som via Web Audio API e vibração quando disponível)
 - Conclusão de treino automática (quando todas as séries são marcadas)
