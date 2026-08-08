@@ -36,20 +36,29 @@ npx serve gymapp
 
 ```
 gymapp/
-├── index.html          → esqueleto de todas as telas
-├── manifest.json        → configuração do PWA (ícones, cores, nome)
-├── service-worker.js    → cache offline (estratégia cache-first)
-├── css/style.css        → design system completo (dark/light theme)
+├── index.html            → esqueleto de todas as telas
+├── manifest.json          → configuração do PWA (ícones, cores, nome)
+├── service-worker.js      → cache offline (estratégia cache-first)
+├── firestore.rules        → regras de segurança do Firestore (cole no console Firebase)
+├── css/style.css          → design system completo (dark/light theme)
 ├── js/
-│   ├── db.js             → camada IndexedDB (perfil, treinos, histórico...)
-│   ├── exercises.js      → biblioteca de ~90 exercícios cadastrados
-│   ├── timer.js           → cronômetro circular de descanso
-│   ├── charts.js          → gráficos em Canvas puro
-│   ├── ui.js              → toda a lógica de telas e interações
-│   ├── pwa.js              → registro do service worker / instalação
-│   └── app.js              → inicialização geral
-├── icons/                → ícones do PWA (gerados, pode substituir pelos seus)
-└── images/                → avatar e imagem placeholder dos exercícios
+│   ├── firebase-config.js  → chaves do SEU projeto Firebase (veja seção acima)
+│   ├── auth.js              → login por e-mail/senha e Google
+│   ├── db.js                 → roteador: escolhe db-local ou db-cloud automaticamente
+│   ├── db-local.js           → camada IndexedDB (fallback 100% offline)
+│   ├── db-cloud.js           → camada Firestore (sincronizada entre dispositivos)
+│   ├── pictograms.js          → ícones animados SVG dos padrões de movimento
+│   ├── exercises.js           → biblioteca de ~113 exercícios cadastrados
+│   ├── generator.js            → gerador de fichas (split, exercícios, séries)
+│   ├── program.js               → mesociclo, semanas, progressão automática de carga
+│   ├── nutrition.js              → recomendações de cardio/proteína/água por objetivo
+│   ├── timer.js                   → cronômetro circular de descanso
+│   ├── charts.js                   → gráficos em Canvas puro
+│   ├── ui.js                        → toda a lógica de telas e interações
+│   ├── pwa.js                        → registro do service worker / instalação
+│   └── app.js                         → inicialização geral + fluxo de login
+├── icons/                  → ícones do PWA (gerados, pode substituir pelos seus)
+└── images/                  → avatar e imagem placeholder dos exercícios
 ```
 
 ## Sincronização entre dispositivos (opcional)
@@ -143,16 +152,28 @@ sem configurar, continua funcionando local normalmente.
   embutido logo abaixo, sem sair do app. Os demais exercícios abrem uma
   busca no YouTube em nova aba (ainda não têm vídeo curado/verificado —
   posso ir adicionando mais conforme você pedir)
+- **Programa de treino com progressão real** (mesociclo de 5 semanas):
+  ao gerar uma ficha, os exercícios escolhidos ficam **fixos** durante
+  5 semanas — isso é o que permite comparar carga/reps de uma semana
+  pra outra. Dentro de cada dia, os exercícios são ordenados seguindo
+  lógica de treino (compostos como agachamento/supino/remada primeiro,
+  isolados como rosca/elevação lateral por último). Toda semana, o
+  app recalcula sozinho a carga sugerida de cada exercício com base no
+  que você **realmente registrou** na sessão anterior: bateu a meta de
+  reps em todas as séries → sugere subir a carga; não bateu → sugere
+  repetir o peso. A 5ª semana de cada ciclo é automaticamente uma
+  semana de recuperação (deload, com menos volume/carga). Card "Seu
+  Programa" na tela Início mostra a semana atual e quanto falta para
+  os exercícios serem renovados
 - **Ficha de Treino Inteligente**: idade, peso, altura, objetivo, nível de
   experiência, local de treino (academia ou casa/calistenia) e dias/tempo
-  disponíveis → gera a divisão de treino, escolhe os exercícios (com
-  embaralhamento — duas gerações com os mesmos dados saem variadas) e
-  sugere séries/repetições. Em splits de 6-7 dias, os dias repetidos
-  (ex: "Peito e Tríceps" e "Peito e Tríceps (B)") saem com exercícios
-  diferentes sempre que a biblioteca permitir. Se você já tem um recorde
-  registrado para um exercício sorteado, a ficha sugere um peso inicial
-  baseado nesse histórico em vez de deixar em branco. Regenerar a ficha
-  sempre reflete exatamente os dias selecionados (os demais são esvaziados)
+  disponíveis → gera a divisão de treino e escolhe os exercícios (evitando
+  repetir os mesmos exercícios entre dias parecidos do split, ex: "Peito
+  e Tríceps" e "Peito e Tríceps (B)" num split de 6 dias). Se você já tem
+  um recorde registrado para um exercício sorteado, a ficha usa isso como
+  ponto de partida em vez de deixar em branco. Gerar uma ficha nova sempre
+  reflete exatamente os dias selecionados (os demais são esvaziados) e
+  começa um novo mesociclo do zero
 - **Nutrição, Água e Cardio** (card na Início + modal completo): a partir
   do peso e objetivo cadastrados, calcula automaticamente faixa de
   proteína diária (g/kg conforme o objetivo), meta de água (ml/kg + bônus
@@ -185,5 +206,3 @@ sem configurar, continua funcionando local normalmente.
 - Suporte a múltiplos perfis/usuários no mesmo aparelho
 - Opção "Casa com halteres" como nível intermediário entre calistenia
   pura e academia completa
-- Progressão automática ao longo das semanas (aumentar carga/reps
-  gradualmente com base no histórico, não só no primeiro treino)

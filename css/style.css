@@ -719,6 +719,15 @@ h4 { font-size: 14px; }
 #sync-status-badge.badge-local { background: var(--bg-elev-2); color: var(--text-faint); }
 
 /* ----------------------------------------------------------------
+   21. PROGRAMA DE TREINO (mesociclo / progressão)
+---------------------------------------------------------------- */
+.program-card { border-color: var(--accent); }
+.program-deload-note {
+  margin-top: 10px; font-size: 12px; color: var(--warning);
+  background: rgba(255,177,61,0.12); border-radius: var(--r-sm); padding: 8px 10px;
+}
+
+/* ----------------------------------------------------------------
    19. ACESSIBILIDADE / RESPONSIVO
 ---------------------------------------------------------------- */
 button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {

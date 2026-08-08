@@ -26,7 +26,6 @@ const DBCloud = (() => {
     RECORDS: 'records',
     WATERLOG: 'waterLog'
   };
-
   let persistenceAttempted = false;
 
   /* --------------------------------------------------------------
@@ -225,22 +224,38 @@ const DBCloud = (() => {
   }
 
   /* ================================================================
+     API PÚBLICA — PROGRAMA / MESOCICLO ATUAL
+     (guardado como campo "program" no documento raiz do usuário)
+  ================================================================ */
+  async function getProgram() {
+    await open();
+    const snap = await userDocRef().get();
+    return snap.exists ? (snap.data().program || null) : null;
+  }
+
+  async function saveProgram(programData) {
+    await open();
+    return userDocRef().set({ program: programData }, { merge: true });
+  }
+
+  /* ================================================================
      API PÚBLICA — BACKUP / RESTAURAÇÃO / RESET
   ================================================================ */
   async function exportAll() {
-    const [profile, settings, plans, history, bodyweight, records, waterLog] = await Promise.all([
+    const [profile, settings, plans, history, bodyweight, records, waterLog, program] = await Promise.all([
       getProfile(),
       getSettings(),
       getAllWorkoutDays(),
       getHistory(),
       getBodyWeightLog(),
       getAllFromCollection(STORES.RECORDS),
-      getAllFromCollection(STORES.WATERLOG)
+      getAllFromCollection(STORES.WATERLOG),
+      getProgram()
     ]);
     return {
       exportedAt: new Date().toISOString(),
       version: 'cloud-1',
-      profile, settings, plans, history, bodyweight, records, waterLog
+      profile, settings, plans, history, bodyweight, records, waterLog, program
     };
   }
 
@@ -263,13 +278,14 @@ const DBCloud = (() => {
       const col = await collectionRef(STORES.WATERLOG);
       for (const w of data.waterLog) await col.doc(w.date).set(w);
     }
+    if (data.program) await saveProgram(data.program);
 
     return true;
   }
 
   async function resetAll() {
     await userDocRef().set(
-      { profile: firebase.firestore.FieldValue.delete(), settings: firebase.firestore.FieldValue.delete() },
+      { profile: firebase.firestore.FieldValue.delete(), settings: firebase.firestore.FieldValue.delete(), program: firebase.firestore.FieldValue.delete() },
       { merge: true }
     );
     await clearCollection(STORES.WORKOUT_PLAN);
@@ -293,6 +309,7 @@ const DBCloud = (() => {
     addBodyWeight, getBodyWeightLog,
     getRecord, setRecord, checkAndUpdateRecord,
     getWaterToday, addWaterMl, resetWaterToday,
+    getProgram, saveProgram,
     exportAll, importAll, resetAll
   };
 })();

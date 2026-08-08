@@ -41,6 +41,7 @@
       Timer.init();
       await UI.init();
       UI.refreshAccountUI?.();
+      await UI.checkWeeklyProgression?.();
       PWA.init();
     } catch (err) {
       console.error('[App] Erro crítico na inicialização:', err);

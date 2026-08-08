@@ -197,6 +197,19 @@
       </div>
 
       <!-- Nutrição, água e cardio -->
+      <!-- Programa de treino (mesociclo) -->
+      <div class="card program-card hidden" id="program-card">
+        <div class="card-header">
+          <h3>📈 Seu Programa</h3>
+          <span class="badge badge-accent" id="program-week-badge">--</span>
+        </div>
+        <div class="progress-bar-track">
+          <div id="program-progress-fill" class="progress-bar-fill" style="width:0%"></div>
+        </div>
+        <p class="progress-caption" id="program-caption">--</p>
+        <p class="program-deload-note hidden" id="program-deload-note">🔋 Esta é uma semana de recuperação (deload) — cargas e volume reduzidos de propósito, faz parte do plano.</p>
+      </div>
+
       <div class="card nutrition-card" id="nutrition-card">
         <div class="card-header">
           <h3>🥗 Nutrição, Água e Cardio</h3>
@@ -738,6 +751,7 @@
 <script src="js/pictograms.js" defer></script>
 <script src="js/exercises.js" defer></script>
 <script src="js/generator.js" defer></script>
+<script src="js/program.js" defer></script>
 <script src="js/nutrition.js" defer></script>
 <script src="js/timer.js" defer></script>
 <script src="js/charts.js" defer></script>

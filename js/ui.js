@@ -227,6 +227,54 @@ const UI = (() => {
     }
 
     await renderNutritionQuick(profile);
+    await renderProgramCard();
+  }
+
+  /* ================================================================
+     PROGRAMA DE TREINO (mesociclo / progressão)
+  ================================================================ */
+  async function renderProgramCard() {
+    const card = document.getElementById('program-card');
+    if (!card) return;
+
+    const program = await Program.getActiveProgram();
+    if (!program) {
+      card.classList.add('hidden');
+      return;
+    }
+
+    const info = Program.computeWeekInfo(program);
+    card.classList.remove('hidden');
+
+    document.getElementById('program-week-badge').textContent = `Semana ${info.weekInCycle}/${info.cycleWeeks}`;
+
+    const percent = Math.round((info.weekInCycle / info.cycleWeeks) * 100);
+    document.getElementById('program-progress-fill').style.width = `${percent}%`;
+
+    document.getElementById('program-caption').textContent =
+      `Mesociclo ${info.cycleNumber} · Exercícios renovam em ${info.daysUntilRotation} dia(s)`;
+
+    document.getElementById('program-deload-note').classList.toggle('hidden', !info.isDeloadWeek);
+  }
+
+  /* Verificado uma vez no boot: se já se passou uma semana desde a
+     última atualização, recalcula a carga sugerida de cada exercício
+     com base no que a pessoa realmente registrou (progressão dupla). */
+  async function checkWeeklyProgression() {
+    if (!window.Program) return;
+    try {
+      const result = await Program.maybeRefreshWeek();
+      if (result.refreshed) {
+        const msg = result.weekInfo.isDeloadWeek
+          ? `Semana de recuperação (deload) — cargas ajustadas para baixo 🔋`
+          : `Cargas atualizadas com base no seu progresso — Semana ${result.weekInfo.weekInCycle}/${result.weekInfo.cycleWeeks} 💪`;
+        showToast(msg, 'success');
+        await renderHome();
+        if (state.currentScreen === 'workouts') await renderWorkoutsScreen(state.currentDay);
+      }
+    } catch (err) {
+      console.error('[Program] Erro ao atualizar progressão semanal:', err);
+    }
   }
 
   function goalLabel(goal) {
@@ -546,7 +594,7 @@ const UI = (() => {
       date: new Date().toISOString(),
       day: state.currentDay,
       workoutName: state.currentWorkoutDay.name || WEEKDAY_LABELS[state.currentDay],
-      exercises: exercises.map((ex) => ({ name: ex.name, sets: ex.sets })),
+      exercises: exercises.map((ex) => ({ exerciseId: ex.exerciseId, name: ex.name, sets: ex.sets })),
       durationSeconds,
       volume,
       calories
@@ -724,7 +772,7 @@ const UI = (() => {
     }
 
     const confirmed = confirm(
-      `Isso vai criar treinos para os ${selectedDays.length} dia(s) selecionado(s) e ESVAZIAR os demais dias da semana (para a ficha refletir exatamente sua seleção). Deseja continuar?`
+      `Isso vai iniciar um NOVO programa de treino (mesociclo de ${Program.CYCLE_WEEKS} semanas): cria treinos para os ${selectedDays.length} dia(s) selecionado(s), esvazia os demais dias da semana, e sorteia exercícios novos. Deseja continuar?`
     );
     if (!confirmed) return;
 
@@ -1320,7 +1368,7 @@ const UI = (() => {
     }
   }
 
-  return { init, switchScreen, showToast, state, refreshAccountUI };
+  return { init, switchScreen, showToast, state, refreshAccountUI, checkWeeklyProgression };
 })();
 
 window.UI = UI;

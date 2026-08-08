@@ -12,7 +12,7 @@
 const DBLocal = (() => {
 
   const DB_NAME = 'GymProDB';
-  const DB_VERSION = 2;
+  const DB_VERSION = 3;
 
   // Nomes das object stores (equivalentes a "tabelas")
   const STORES = {
@@ -22,7 +22,8 @@ const DBLocal = (() => {
     HISTORY: 'history',           // histórico de treinos concluídos (autoIncrement)
     BODYWEIGHT: 'bodyweight',     // log de peso corporal ao longo do tempo (autoIncrement)
     RECORDS: 'records',            // recordes pessoais por exercício (keyPath: exerciseId)
-    WATERLOG: 'waterLog'           // consumo de água por dia (keyPath: date, 1 registro/dia)
+    WATERLOG: 'waterLog',           // consumo de água por dia (keyPath: date, 1 registro/dia)
+    PROGRAM: 'program'              // estado do programa/mesociclo atual (keyPath: id, 1 registro)
   };
 
   let dbInstance = null;
@@ -62,6 +63,9 @@ const DBLocal = (() => {
         }
         if (!db.objectStoreNames.contains(STORES.WATERLOG)) {
           db.createObjectStore(STORES.WATERLOG, { keyPath: 'date' });
+        }
+        if (!db.objectStoreNames.contains(STORES.PROGRAM)) {
+          db.createObjectStore(STORES.PROGRAM, { keyPath: 'id' });
         }
       };
 
@@ -261,22 +265,35 @@ const DBLocal = (() => {
   }
 
   /* ================================================================
+     API PÚBLICA — PROGRAMA / MESOCICLO ATUAL
+  ================================================================ */
+  async function getProgram() {
+    const program = await get(STORES.PROGRAM, 1);
+    return program || null;
+  }
+
+  async function saveProgram(programData) {
+    return put(STORES.PROGRAM, { ...programData, id: 1 });
+  }
+
+  /* ================================================================
      API PÚBLICA — BACKUP / RESTAURAÇÃO / RESET
   ================================================================ */
   async function exportAll() {
-    const [profile, settings, plans, history, bodyweight, records, waterLog] = await Promise.all([
+    const [profile, settings, plans, history, bodyweight, records, waterLog, program] = await Promise.all([
       getProfile(),
       getSettings(),
       getAllWorkoutDays(),
       getHistory(),
       getBodyWeightLog(),
       getAll(STORES.RECORDS),
-      getAll(STORES.WATERLOG)
+      getAll(STORES.WATERLOG),
+      getProgram()
     ]);
     return {
       exportedAt: new Date().toISOString(),
       version: DB_VERSION,
-      profile, settings, plans, history, bodyweight, records, waterLog
+      profile, settings, plans, history, bodyweight, records, waterLog, program
     };
   }
 
@@ -290,6 +307,7 @@ const DBLocal = (() => {
     await clearStore(STORES.BODYWEIGHT);
     await clearStore(STORES.RECORDS);
     await clearStore(STORES.WATERLOG);
+    await clearStore(STORES.PROGRAM);
 
     if (data.profile) await put(STORES.PROFILE, { ...data.profile, id: 1 });
     if (data.settings) await put(STORES.SETTINGS, { ...data.settings, id: 1 });
@@ -298,6 +316,7 @@ const DBLocal = (() => {
     if (Array.isArray(data.bodyweight)) for (const b of data.bodyweight) await put(STORES.BODYWEIGHT, b);
     if (Array.isArray(data.records)) for (const r of data.records) await put(STORES.RECORDS, r);
     if (Array.isArray(data.waterLog)) for (const w of data.waterLog) await put(STORES.WATERLOG, w);
+    if (data.program) await put(STORES.PROGRAM, { ...data.program, id: 1 });
 
     return true;
   }
@@ -310,6 +329,7 @@ const DBLocal = (() => {
     await clearStore(STORES.BODYWEIGHT);
     await clearStore(STORES.RECORDS);
     await clearStore(STORES.WATERLOG);
+    await clearStore(STORES.PROGRAM);
     return true;
   }
 
@@ -326,6 +346,7 @@ const DBLocal = (() => {
     addBodyWeight, getBodyWeightLog,
     getRecord, setRecord, checkAndUpdateRecord,
     getWaterToday, addWaterMl, resetWaterToday,
+    getProgram, saveProgram,
     exportAll, importAll, resetAll
   };
 })();

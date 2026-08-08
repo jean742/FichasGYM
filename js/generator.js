@@ -172,7 +172,26 @@ const Generator = (() => {
       }
       round++;
     }
-    return picked;
+    return sortByTrainingLogic(picked);
+  }
+
+  /* ----------------------------------------------------------------
+     Ordena os exercícios do dia seguindo a lógica clássica de
+     musculação: movimentos COMPOSTOS (multiarticulares — agachamento,
+     supino, remada, terra...) primeiro, enquanto o corpo está fresco
+     e a coordenação/estabilização é mais exigida; exercícios de
+     ISOLAMENTO (rosca, elevação lateral, extensão...) por último.
+     Isso é o que faz o treino parecer "planejado" e não uma lista
+     solta de exercícios em qualquer ordem.
+  ---------------------------------------------------------------- */
+  const COMPOUND_PATTERNS = new Set(['push', 'pull', 'squat', 'hinge']);
+
+  function sortByTrainingLogic(exercises) {
+    return [...exercises].sort((a, b) => {
+      const aCompound = COMPOUND_PATTERNS.has(a.pattern) ? 0 : 1;
+      const bCompound = COMPOUND_PATTERNS.has(b.pattern) ? 0 : 1;
+      return aCompound - bCompound; // compostos (0) antes de isolados (1); mantém ordem relativa dentro do grupo
+    });
   }
 
   /* ----------------------------------------------------------------
@@ -316,6 +335,11 @@ const Generator = (() => {
     if (params.experience) profile.experience = params.experience;
     if (params.location) profile.trainingLocation = params.location;
     await window.DB.saveProfile(profile);
+
+    // Inicia um novo mesociclo: os exercícios escolhidos agora ficam
+    // fixos por algumas semanas, e a carga passa a evoluir sozinha
+    // (veja program.js) em vez de sortear tudo de novo a cada geração.
+    await window.Program.startNewProgram(params);
 
     return plan;
   }
