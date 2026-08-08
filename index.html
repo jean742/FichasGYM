@@ -196,7 +196,18 @@
         </div>
       </div>
 
-      <!-- Nutrição, água e cardio -->
+      <!-- Coach (dicas personalizadas + perguntas) -->
+      <div class="card coach-card" id="coach-card">
+        <div class="coach-card-header">
+          <div class="coach-avatar">🤖</div>
+          <div class="coach-card-text">
+            <strong>Seu Coach</strong>
+            <p id="coach-headline">Carregando dica do dia...</p>
+          </div>
+        </div>
+        <button id="btn-open-coach" class="btn-secondary btn-block">Conversar com o Coach</button>
+      </div>
+
       <!-- Programa de treino (mesociclo) -->
       <div class="card program-card hidden" id="program-card">
         <div class="card-header">
@@ -418,6 +429,20 @@
         <div id="account-not-configured" class="hidden">
           <p class="about-text">A sincronização entre dispositivos ainda não foi configurada neste app (veja o README, seção "Sincronização"). Por enquanto, os dados ficam salvos só neste aparelho.</p>
         </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>🤖 IA do Coach (opcional)</h3>
+        </div>
+        <p class="generator-desc">Por padrão, o Coach já dá dicas personalizadas usando seus dados reais (sem precisar de nada extra). Se quiser que ele responda perguntas livres com uma IA de verdade (Claude, da Anthropic), cole sua própria chave de API abaixo — fica salva só neste aparelho, nunca é sincronizada.</p>
+        <label class="field">
+          <span>Chave de API da Anthropic</span>
+          <input id="cfg-ai-key" type="password" placeholder="sk-ant-...">
+        </label>
+        <button id="btn-save-ai-key" class="btn-primary btn-block">Salvar Chave</button>
+        <button id="btn-clear-ai-key" class="btn-danger btn-block hidden">Remover Chave</button>
+        <p class="about-text" id="ai-key-status"></p>
       </div>
 
       <div class="card">
@@ -653,6 +678,31 @@
   </div>
 
   <!-- ==========================================================
+       MODAL — COACH (dicas + perguntas)
+  ========================================================== -->
+  <div id="modal-coach" class="modal hidden">
+    <div class="modal-sheet modal-sheet-full">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h3>🤖 Seu Coach</h3>
+        <button class="modal-close" data-close="modal-coach" aria-label="Fechar">✕</button>
+      </div>
+
+      <div id="coach-insights-list" class="coach-insights-list"></div>
+
+      <div id="coach-chat" class="coach-chat"></div>
+
+      <div id="coach-quick-questions" class="coach-quick-questions"></div>
+
+      <div id="coach-ask-row" class="coach-ask-row hidden">
+        <input id="coach-ask-input" type="text" placeholder="Pergunte algo ao coach...">
+        <button id="coach-ask-send" class="btn-icon-round" aria-label="Enviar">➤</button>
+      </div>
+      <p class="coach-ai-hint" id="coach-ai-hint"></p>
+    </div>
+  </div>
+
+  <!-- ==========================================================
        MODAL — NUTRIÇÃO, ÁGUA E CARDIO (recomendações por objetivo)
   ========================================================== -->
   <div id="modal-nutrition" class="modal hidden">
@@ -753,6 +803,8 @@
 <script src="js/generator.js" defer></script>
 <script src="js/program.js" defer></script>
 <script src="js/nutrition.js" defer></script>
+<script src="js/coach.js" defer></script>
+<script src="js/ai-coach.js" defer></script>
 <script src="js/timer.js" defer></script>
 <script src="js/charts.js" defer></script>
 <script src="js/ui.js" defer></script>

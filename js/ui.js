@@ -52,6 +52,7 @@ const UI = (() => {
     bindGenerator();
     bindNutrition();
     bindAccount();
+    bindCoach();
 
     populateLibraryFilters();
 
@@ -228,6 +229,7 @@ const UI = (() => {
 
     await renderNutritionQuick(profile);
     await renderProgramCard();
+    await renderCoachCard();
   }
 
   /* ================================================================
@@ -274,6 +276,136 @@ const UI = (() => {
       }
     } catch (err) {
       console.error('[Program] Erro ao atualizar progressão semanal:', err);
+    }
+  }
+
+  /* ================================================================
+     COACH (dicas personalizadas + perguntas)
+  ================================================================ */
+  function bindCoach() {
+    document.getElementById('btn-open-coach')?.addEventListener('click', openCoachModal);
+
+    document.getElementById('coach-ask-send')?.addEventListener('click', submitCoachQuestion);
+    document.getElementById('coach-ask-input')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitCoachQuestion();
+    });
+
+    document.getElementById('btn-save-ai-key')?.addEventListener('click', () => {
+      const key = document.getElementById('cfg-ai-key').value.trim();
+      if (!key) { showToast('Cole uma chave válida primeiro.', 'danger'); return; }
+      AICoach.saveApiKey(key);
+      document.getElementById('cfg-ai-key').value = '';
+      showToast('Chave de IA salva neste aparelho', 'success');
+      renderAIKeyStatus();
+    });
+
+    document.getElementById('btn-clear-ai-key')?.addEventListener('click', () => {
+      AICoach.saveApiKey('');
+      showToast('Chave de IA removida', 'success');
+      renderAIKeyStatus();
+    });
+  }
+
+  function renderAIKeyStatus() {
+    const statusEl = document.getElementById('ai-key-status');
+    const clearBtn = document.getElementById('btn-clear-ai-key');
+    if (!statusEl) return;
+    const configured = window.AICoach?.isConfigured?.();
+    statusEl.textContent = configured
+      ? '✅ Chave configurada — o Coach já pode responder perguntas livres com IA.'
+      : 'Nenhuma chave configurada — o Coach usa só as respostas prontas por enquanto.';
+    clearBtn?.classList.toggle('hidden', !configured);
+  }
+
+  /* Mostra no card da Início a dica de maior prioridade do momento */
+  async function renderCoachCard() {
+    const headlineEl = document.getElementById('coach-headline');
+    if (!headlineEl || !window.Coach) return;
+    try {
+      const insights = await Coach.getInsights();
+      headlineEl.textContent = insights[0]?.text || 'Tudo certo por aqui!';
+    } catch (err) {
+      console.error('[Coach] Erro ao gerar dica:', err);
+      headlineEl.textContent = 'Continue firme no treino! 💪';
+    }
+  }
+
+  async function openCoachModal() {
+    const listEl = document.getElementById('coach-insights-list');
+    const chatEl = document.getElementById('coach-chat');
+    const quickEl = document.getElementById('coach-quick-questions');
+    const askRow = document.getElementById('coach-ask-row');
+    const hint = document.getElementById('coach-ai-hint');
+
+    listEl.innerHTML = '<p class="last-workout-empty">Analisando seus dados...</p>';
+    chatEl.innerHTML = '';
+    document.getElementById('modal-coach').classList.remove('hidden');
+
+    const insights = await Coach.getInsights();
+    listEl.innerHTML = insights.map((i) => `
+      <div class="coach-insight-item">
+        <span class="coach-insight-icon">${i.icon}</span>
+        <span class="coach-insight-text">${i.text}</span>
+      </div>
+    `).join('');
+
+    quickEl.innerHTML = Coach.QUICK_QUESTIONS.map((q) =>
+      `<button class="coach-quick-btn" data-question-id="${q.id}">${q.label}</button>`
+    ).join('');
+
+    quickEl.querySelectorAll('.coach-quick-btn').forEach((btn) => {
+      btn.addEventListener('click', () => askQuickQuestion(btn.dataset.questionId));
+    });
+
+    const aiConfigured = window.AICoach?.isConfigured?.();
+    askRow.classList.toggle('hidden', !aiConfigured);
+    hint.textContent = aiConfigured
+      ? 'Respostas geradas por IA (Claude) usando seus dados reais.'
+      : 'Toque numa pergunta acima, ou configure uma chave de IA nos Ajustes para perguntar qualquer coisa.';
+  }
+
+  function appendCoachBubble(text, who) {
+    const chatEl = document.getElementById('coach-chat');
+    const bubble = document.createElement('div');
+    bubble.className = `coach-bubble ${who === 'user' ? 'coach-bubble-user' : 'coach-bubble-coach'}`;
+    bubble.textContent = text;
+    chatEl.appendChild(bubble);
+    bubble.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    return bubble;
+  }
+
+  async function askQuickQuestion(questionId) {
+    const question = Coach.QUICK_QUESTIONS.find((q) => q.id === questionId);
+    if (!question) return;
+    appendCoachBubble(question.label, 'user');
+    const loading = appendCoachBubble('Pensando...', 'coach');
+    try {
+      const answer = await question.handler();
+      loading.textContent = answer;
+    } catch (err) {
+      console.error('[Coach] Erro ao responder pergunta rápida:', err);
+      loading.textContent = 'Não consegui calcular isso agora — tenta de novo daqui a pouco.';
+    }
+  }
+
+  async function submitCoachQuestion() {
+    const input = document.getElementById('coach-ask-input');
+    const question = input.value.trim();
+    if (!question) return;
+    input.value = '';
+
+    appendCoachBubble(question, 'user');
+    const loading = appendCoachBubble('Pensando...', 'coach');
+    loading.classList.add('coach-bubble-loading');
+
+    try {
+      const answer = await AICoach.ask(question);
+      loading.classList.remove('coach-bubble-loading');
+      loading.textContent = answer;
+    } catch (err) {
+      console.error('[Coach] Erro na chamada de IA:', err);
+      loading.classList.remove('coach-bubble-loading');
+      loading.textContent = `Não consegui falar com a IA agora (${err.message || 'erro desconhecido'}). Confira sua chave de API nos Ajustes.`;
     }
   }
 
@@ -1319,6 +1451,8 @@ const UI = (() => {
       document.documentElement.style.setProperty('--accent-dim', hexToRgbaLocal(settings.accentColor, 0.16));
     }
     document.querySelectorAll('#color-swatches .swatch').forEach((b) => b.classList.toggle('active', b.dataset.color === settings.accentColor));
+
+    renderAIKeyStatus();
   }
 
   /* ================================================================

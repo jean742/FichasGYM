@@ -238,6 +238,10 @@ const DBLocal = (() => {
     return false;
   }
 
+  async function getAllRecords() {
+    return getAll(STORES.RECORDS);
+  }
+
   /* ================================================================
      API PÚBLICA — HIDRATAÇÃO (consumo de água por dia)
   ================================================================ */
@@ -344,7 +348,7 @@ const DBLocal = (() => {
     getWorkoutDay, getAllWorkoutDays, saveWorkoutDay,
     addHistoryEntry, getHistory, getHistoryByDateRange,
     addBodyWeight, getBodyWeightLog,
-    getRecord, setRecord, checkAndUpdateRecord,
+    getRecord, setRecord, checkAndUpdateRecord, getAllRecords,
     getWaterToday, addWaterMl, resetWaterToday,
     getProgram, saveProgram,
     exportAll, importAll, resetAll

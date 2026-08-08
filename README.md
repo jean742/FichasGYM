@@ -51,6 +51,8 @@ gymapp/
 │   ├── exercises.js           → biblioteca de ~113 exercícios cadastrados
 │   ├── generator.js            → gerador de fichas (split, exercícios, séries)
 │   ├── program.js               → mesociclo, semanas, progressão automática de carga
+│   ├── coach.js                  → dicas personalizadas e perguntas prontas
+│   ├── ai-coach.js                → integração opcional com a API da Anthropic
 │   ├── nutrition.js              → recomendações de cardio/proteína/água por objetivo
 │   ├── timer.js                   → cronômetro circular de descanso
 │   ├── charts.js                   → gráficos em Canvas puro
@@ -152,6 +154,16 @@ sem configurar, continua funcionando local normalmente.
   embutido logo abaixo, sem sair do app. Os demais exercícios abrem uma
   busca no YouTube em nova aba (ainda não têm vídeo curado/verificado —
   posso ir adicionando mais conforme você pedir)
+- **Coach com dicas personalizadas** (card na Início + modal completo):
+  analisa seu programa, histórico, recordes, água e nutrição pra gerar
+  dicas contextuais — avisa em semana de deload, comemora recordes
+  novos, lembra de treinar se a semana está passando em branco, avisa
+  quando o volume caiu ou subiu, entre outras. Tem 5 perguntas prontas
+  ("O que eu treino hoje?", "Como está minha semana?" etc.) que sempre
+  funcionam, mesmo offline. Opcionalmente, dá pra configurar sua
+  própria chave de API da Anthropic (Claude) nos Ajustes pra ele
+  responder perguntas livres com uma IA de verdade — a chave fica
+  salva só no aparelho, nunca é sincronizada ou incluída em backups
 - **Programa de treino com progressão real** (mesociclo de 5 semanas):
   ao gerar uma ficha, os exercícios escolhidos ficam **fixos** durante
   5 semanas — isso é o que permite comparar carga/reps de uma semana

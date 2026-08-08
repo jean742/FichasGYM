@@ -728,6 +728,56 @@ h4 { font-size: 14px; }
 }
 
 /* ----------------------------------------------------------------
+   22. COACH (dicas personalizadas + perguntas)
+---------------------------------------------------------------- */
+.coach-card { background: linear-gradient(135deg, rgba(124,92,255,0.16), transparent 70%); border-color: #7C5CFF; }
+.coach-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.coach-avatar {
+  width: 42px; height: 42px; border-radius: var(--r-full); flex-shrink: 0;
+  background: linear-gradient(135deg, #7C5CFF, var(--accent));
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+  box-shadow: 0 0 16px rgba(124,92,255,0.4);
+}
+.coach-card-text strong { font-size: 14px; }
+.coach-card-text p { font-size: 12.5px; color: var(--text-dim); margin-top: 2px; line-height: 1.4; }
+
+.coach-insights-list { display: flex; flex-direction: column; gap: 8px; }
+.coach-insight-item {
+  display: flex; gap: 10px; align-items: flex-start; background: var(--bg-elev-2);
+  border-radius: var(--r-md); padding: 12px;
+}
+.coach-insight-icon { font-size: 18px; flex-shrink: 0; }
+.coach-insight-text { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+
+.coach-chat { display: flex; flex-direction: column; gap: 10px; }
+.coach-bubble {
+  max-width: 85%; padding: 10px 14px; border-radius: 16px; font-size: 13.5px; line-height: 1.5;
+}
+.coach-bubble-user {
+  align-self: flex-end; background: var(--accent); color: var(--accent-text);
+  border-bottom-right-radius: 4px;
+}
+.coach-bubble-coach {
+  align-self: flex-start; background: var(--bg-elev-2); color: var(--text);
+  border-bottom-left-radius: 4px;
+}
+.coach-bubble-loading { align-self: flex-start; color: var(--text-faint); font-size: 12.5px; font-style: italic; }
+
+.coach-quick-questions { display: flex; flex-wrap: wrap; gap: 8px; }
+.coach-quick-btn {
+  background: var(--bg-elev-2); color: var(--text-dim); font-size: 12.5px; font-weight: 600;
+  padding: 9px 14px; border-radius: var(--r-full); border: 1px solid var(--border);
+}
+.coach-quick-btn:active { background: var(--bg-elev-3); }
+
+.coach-ask-row { display: flex; gap: 8px; }
+.coach-ask-row input {
+  flex: 1; background: var(--bg-elev-2); border: 1px solid var(--border);
+  border-radius: var(--r-full); padding: 11px 16px; color: var(--text); font-size: 14px;
+}
+.coach-ai-hint { font-size: 11px; color: var(--text-faint); text-align: center; }
+
+/* ----------------------------------------------------------------
    19. ACESSIBILIDADE / RESPONSIVO
 ---------------------------------------------------------------- */
 button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
