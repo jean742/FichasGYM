@@ -66,9 +66,17 @@ sem configurar, continua funcionando local normalmente.
    clique em "Adicionar projeto", dê um nome (ex: "gym-pro") e siga o assistente
    (pode desativar o Google Analytics, não é necessário).
 
-2. **Ativar o login por e-mail/senha**: no menu lateral, vá em
+2. **Ativar o login por e-mail/senha e Google**: no menu lateral, vá em
    **Build → Authentication → Get started**. Na aba "Sign-in method",
-   ative o provedor **"E-mail/senha"**.
+   ative os provedores **"E-mail/senha"** e **"Google"** (no Google,
+   basta escolher um e-mail de suporte do projeto e salvar).
+
+   ⚠️ Só para o login com Google: vá em **Authentication → Settings →
+   Authorized domains** e confirme que o domínio onde o app está
+   hospedado está na lista (ex: `jean742.github.io`, se usar GitHub
+   Pages). O `localhost` já vem autorizado por padrão. Sem isso, o
+   botão "Continuar com Google" não funciona (o de e-mail/senha
+   funciona normalmente sem esse passo).
 
 3. **Criar o banco de dados**: no menu lateral, vá em
    **Build → Firestore Database → Create database**. Escolha
@@ -116,9 +124,13 @@ sem configurar, continua funcionando local normalmente.
 ## O que já funciona
 
 - **Sincronização entre dispositivos** (opcional, via Firebase): crie
-  uma conta com e-mail/senha e acesse os mesmos treinos, histórico,
-  água e recordes de qualquer aparelho. Sem configurar, o app funciona
-  100% local como antes — veja a seção acima para ativar
+  uma conta com e-mail/senha ou entre com Google, e acesse os mesmos
+  treinos, histórico, água e recordes de qualquer aparelho. Login com
+  Google já preenche nome e foto automaticamente. Sem configurar, o
+  app funciona 100% local como antes — veja a seção acima para ativar
+- **Foto de perfil**: toque na foto (ou no lápis) na tela Início para
+  escolher uma imagem do aparelho — é redimensionada e comprimida
+  automaticamente antes de salvar (sem precisar de servidor de imagens)
 - Navegação entre 5 telas (Início, Treinos, Progresso, Calendário, Ajustes)
 - Cadastro de treino por dia da semana, com biblioteca de ~113 exercícios
   pesquisável e filtrável (grupo muscular, equipamento, nível)

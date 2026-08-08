@@ -48,6 +48,36 @@ const Auth = (() => {
     await firebase.auth().sendPasswordResetEmail(email.trim());
   }
 
+  /* Login com Google — tenta popup primeiro (mais rápido); se o
+     navegador bloquear o popup (comum em PWA instalado / iOS às
+     vezes), cai automaticamente para redirect. */
+  async function signInWithGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try {
+      const cred = await firebase.auth().signInWithPopup(provider);
+      return cred.user;
+    } catch (err) {
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user') {
+        if (err.code === 'auth/popup-blocked') {
+          await firebase.auth().signInWithRedirect(provider);
+          return null; // a página recarrega; o resultado vem via checkRedirectResult()
+        }
+      }
+      throw err;
+    }
+  }
+
+  /* Verifica se o usuário acabou de voltar de um login por redirect
+     (fallback do Google quando o popup é bloqueado). Chamado uma vez
+     no boot, antes de qualquer outra coisa. */
+  async function checkRedirectResult() {
+    try {
+      await firebase.auth().getRedirectResult();
+    } catch (err) {
+      console.warn('[Auth] Erro ao concluir login por redirect:', err.code || err.message);
+    }
+  }
+
   function getUser() {
     return currentUser;
   }
@@ -71,7 +101,10 @@ const Auth = (() => {
       'auth/network-request-failed': 'Falha de conexão. Verifique sua internet.',
       'auth/operation-not-allowed': 'O login por e-mail/senha ainda não foi ativado no Firebase. No console: Authentication → Sign-in method → ative "E-mail/senha".',
       'auth/configuration-not-found': 'A Authentication ainda não foi configurada neste projeto Firebase. Abra o console → Authentication → Get started.',
-      'auth/unauthorized-domain': 'Este domínio ainda não está autorizado no Firebase. No console: Authentication → Settings → Authorized domains → adicione este domínio.'
+      'auth/unauthorized-domain': 'Este domínio ainda não está autorizado no Firebase. No console: Authentication → Settings → Authorized domains → adicione este domínio.',
+      'auth/popup-closed-by-user': 'Login cancelado.',
+      'auth/cancelled-popup-request': 'Login cancelado.',
+      'auth/account-exists-with-different-credential': 'Já existe uma conta com esse e-mail usando outro método de login (ex: senha). Tente entrar com e-mail/senha.'
     };
     const message = map[error?.code];
     if (message) return message;
@@ -83,6 +116,7 @@ const Auth = (() => {
   return {
     initFirebase, listen,
     signUp, signIn, signOutUser, resetPassword,
+    signInWithGoogle, checkRedirectResult,
     getUser, getUid, friendlyError,
     ready: () => authReady
   };

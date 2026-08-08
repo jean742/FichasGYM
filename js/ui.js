@@ -118,6 +118,66 @@ const UI = (() => {
       selectWeekdayTab(state.currentDay);
       await renderWorkoutsScreen(state.currentDay);
     });
+
+    // Foto de perfil — clicar no lápis (ou na própria foto) abre o seletor de arquivo
+    const openFilePicker = () => document.getElementById('photo-file-input')?.click();
+    document.getElementById('btn-edit-photo')?.addEventListener('click', openFilePicker);
+    document.getElementById('user-photo')?.addEventListener('click', openFilePicker);
+
+    document.getElementById('photo-file-input')?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      e.target.value = ''; // permite escolher o mesmo arquivo de novo depois
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        showToast('Escolha um arquivo de imagem.', 'danger');
+        return;
+      }
+
+      try {
+        const dataUrl = await resizeImageToDataUrl(file, 320, 0.82);
+        const profile = await DB.getProfile();
+        profile.photo = dataUrl;
+        await DB.saveProfile(profile);
+        document.getElementById('user-photo').src = dataUrl;
+        showToast('Foto atualizada', 'success');
+      } catch (err) {
+        console.error('[UI] Erro ao processar a foto:', err);
+        showToast('Não foi possível carregar essa imagem.', 'danger');
+      }
+    });
+  }
+
+  /* Redimensiona/comprime a imagem escolhida via <canvas> (sem libs
+     externas) antes de salvar — evita fotos de câmera (vários MB)
+     estourarem o limite de tamanho de documento do Firestore (1MB)
+     e deixa tudo mais rápido de carregar. */
+  function resizeImageToDataUrl(file, maxSize, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > height && width > maxSize) {
+            height = Math.round(height * (maxSize / width));
+            width = maxSize;
+          } else if (height >= width && height > maxSize) {
+            width = Math.round(width * (maxSize / height));
+            height = maxSize;
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => reject(new Error('Falha ao carregar a imagem'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('Falha ao ler o arquivo'));
+      reader.readAsDataURL(file);
+    });
   }
 
   async function renderHome() {

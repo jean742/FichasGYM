@@ -30,6 +30,8 @@
     try {
       await DB.open();
 
+      await syncProfileFromGoogleIfEmpty();
+
       const settings = await DB.getSettings();
       document.documentElement.setAttribute('data-theme', settings.theme || 'dark');
       if (settings.accentColor) {
@@ -46,6 +48,22 @@
     } finally {
       hideSplash();
     }
+  }
+
+  /* Se a pessoa entrou com Google e ainda não tem nome/foto salvos no
+     perfil do app, aproveita os dados já disponíveis na conta Google
+     (só na primeira vez — nunca sobrescreve o que a pessoa já editou). */
+  async function syncProfileFromGoogleIfEmpty() {
+    const user = window.Auth?.getUser?.();
+    if (!user) return;
+
+    const profile = await DB.getProfile();
+    let changed = false;
+
+    if (!profile.name && user.displayName) { profile.name = user.displayName; changed = true; }
+    if (!profile.photo && user.photoURL) { profile.photo = user.photoURL; changed = true; }
+
+    if (changed) await DB.saveProfile(profile);
   }
 
   function showLoginScreen() {
@@ -130,6 +148,22 @@
         errorEl.classList.remove('hidden');
       }
     });
+
+    document.getElementById('login-google').addEventListener('click', async () => {
+      const errorEl = document.getElementById('login-error');
+      const googleBtn = document.getElementById('login-google');
+      errorEl.classList.add('hidden');
+      googleBtn.disabled = true;
+      try {
+        await Auth.signInWithGoogle();
+        // onAuthStateChanged cuida do resto (ou a página recarrega, se caiu no fallback de redirect)
+      } catch (err) {
+        errorEl.textContent = Auth.friendlyError(err);
+        errorEl.classList.remove('hidden');
+      } finally {
+        googleBtn.disabled = false;
+      }
+    });
   }
 
   /* --------------------------------------------------------------
@@ -139,6 +173,7 @@
 
   if (window.FIREBASE_IS_CONFIGURED) {
     Auth.initFirebase();
+    Auth.checkRedirectResult();
     Auth.listen((user) => {
       if (user) {
         hideLoginScreen();
