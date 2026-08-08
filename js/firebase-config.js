@@ -1,22 +1,10 @@
 /* ================================================================
    GYM PRO — firebase-config.js
-   COLE AQUI as chaves do SEU projeto Firebase (veja o passo a passo
-   no README.md, seção "Sincronização entre dispositivos").
-
-   Como pegar essas chaves:
-   1. console.firebase.google.com → crie um projeto (grátis)
-   2. No projeto, clique no ícone "</>" (Web) para registrar um app
-   3. O Firebase mostra um objeto firebaseConfig — copie os valores
-      e cole exatamente nos campos abaixo.
-
-   Este arquivo é seguro de deixar público no GitHub: essas chaves
-   identificam o projeto, mas não dão acesso a nada por si só — quem
-   protege seus dados são as REGRAS DE SEGURANÇA do Firestore (veja
-   o README) e o login de cada usuário.
+   Configurado com as chaves do projeto "gym-pro-e2936".
 ================================================================ */
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCUverRIkb0LtaEwQeW0xax_2z9NxezQ3g",
+  apiKey: "AIzaSyCUWerRIkb0LtaEwQeW0xax_2z9NxezQ3g",
   authDomain: "gym-pro-e2936.firebaseapp.com",
   projectId: "gym-pro-e2936",
   storageBucket: "gym-pro-e2936.firebasestorage.app",

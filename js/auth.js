@@ -68,9 +68,16 @@ const Auth = (() => {
       'auth/wrong-password': 'Senha incorreta.',
       'auth/invalid-credential': 'E-mail ou senha incorretos.',
       'auth/too-many-requests': 'Muitas tentativas. Aguarde um pouco antes de tentar de novo.',
-      'auth/network-request-failed': 'Falha de conexão. Verifique sua internet.'
+      'auth/network-request-failed': 'Falha de conexão. Verifique sua internet.',
+      'auth/operation-not-allowed': 'O login por e-mail/senha ainda não foi ativado no Firebase. No console: Authentication → Sign-in method → ative "E-mail/senha".',
+      'auth/configuration-not-found': 'A Authentication ainda não foi configurada neste projeto Firebase. Abra o console → Authentication → Get started.',
+      'auth/unauthorized-domain': 'Este domínio ainda não está autorizado no Firebase. No console: Authentication → Settings → Authorized domains → adicione este domínio.'
     };
-    return map[error?.code] || 'Não foi possível completar a ação. Tente novamente.';
+    const message = map[error?.code];
+    if (message) return message;
+    // Fallback: mostra o código bruto do erro para facilitar o diagnóstico
+    console.error('[Auth] Código de erro não mapeado:', error?.code, error?.message);
+    return `Não foi possível completar a ação${error?.code ? ` (${error.code})` : ''}. Tente novamente.`;
   }
 
   return {
